@@ -1,0 +1,130 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #0a0e17;
+  --foreground: #f8fafc;
+  --vault-gold: #f59e0b;
+  --vault-gold-light: #fbbf24;
+  --vault-gem: #10b981;
+  --vault-gem-light: #34d399;
+  --vault-danger: #ef4444;
+  --vault-accent: #8b5cf6;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.vault-card {
+  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+  border: 2px solid #374151;
+  transition: all 0.3s ease;
+}
+
+.vault-card.open {
+  border-color: var(--vault-gold);
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+}
+
+.vault-card.trap {
+  border-color: var(--vault-danger);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+}
+
+.gem-text {
+  background: linear-gradient(135deg, var(--vault-gem) 0%, var(--vault-gem-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gold-text {
+  background: linear-gradient(135deg, var(--vault-gold) 0%, var(--vault-gold-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.glow-gold {
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.5), 0 0 30px rgba(245, 158, 11, 0.2);
+}
+
+.glow-gem {
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.5), 0 0 30px rgba(16, 185, 129, 0.2);
+}
+
+.glow-danger {
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.5), 0 0 30px rgba(239, 68, 68, 0.2);
+}
+
+.shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.shine::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
+  );
+  transform: rotate(30deg);
+  animation: shine 3s infinite;
+}
+
+@keyframes shine {
+  0% {
+    transform: translateX(-100%) rotate(30deg);
+  }
+  100% {
+    transform: translateX(100%) rotate(30deg);
+  }
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.plus-glow {
+  border: 2px solid transparent;
+  background: linear-gradient(#1f2937, #1f2937) padding-box,
+              linear-gradient(90deg, #f59e0b, #fbbf24, #f59e0b) border-box;
+  animation: plusGlowShift 2s linear infinite;
+  background-size: 200% 100%;
+}
+
+@keyframes plusGlowShift {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 200% 0%;
+  }
+}
