@@ -1,10 +1,18 @@
-export type StripeShopItemId = "gems-200" | "starter" | "adfree" | "plus";
+export type StripeShopItemId =
+  | "gems-500"
+  | "keys-5-usd"
+  | "keys-20-usd"
+  | "keys-50-usd"
+  | "keys-100-usd"
+  | "starter"
+  | "adfree"
+  | "plus";
 
 export type StripeShopItem = {
   id: StripeShopItemId;
   priceId: string;
   mode: "payment" | "subscription";
-  type: "gems" | "bundle" | "adFree" | "subscription";
+  type: "gems" | "keys" | "bundle" | "adFree" | "subscription";
   quantity: number;
   label: string;
 };
@@ -12,17 +20,49 @@ export type StripeShopItem = {
 const stripeMode = process.env.STRIPE_MODE === "live" ? "live" : "test";
 
 export const STRIPE_SHOP_ITEMS: Record<StripeShopItemId, StripeShopItem> = {
-  "gems-200": {
-    id: "gems-200",
-    priceId: stripeMode === "test" ? "price_1TZLBvByXBrHdKMK0SrXKYV2" : "price_1TZKo1ByXBrHdKMKF3ttBYpY",
+  "gems-500": {
+    id: "gems-500",
+    priceId: stripeMode === "test" ? "price_1TZiWnByXBrHdKMKoAIwVwmJ" : "price_1TZiWnByXBrHdKMKoAIwVwmJ",
     mode: "payment",
     type: "gems",
-    quantity: 200,
-    label: "200 Gems",
+    quantity: 500,
+    label: "Starter Gem Bundle",
+  },
+  "keys-5-usd": {
+    id: "keys-5-usd",
+    priceId: stripeMode === "test" ? "price_1TZiWGByXBrHdKMKjCeXpN77" : "price_1TZiWGByXBrHdKMKjCeXpN77",
+    mode: "payment",
+    type: "keys",
+    quantity: 5,
+    label: "5 Keys",
+  },
+  "keys-20-usd": {
+    id: "keys-20-usd",
+    priceId: stripeMode === "test" ? "price_1TZiUsByXBrHdKMK00w3mER9" : "price_1TZiUsByXBrHdKMK00w3mER9",
+    mode: "payment",
+    type: "keys",
+    quantity: 20,
+    label: "20 Keys",
+  },
+  "keys-50-usd": {
+    id: "keys-50-usd",
+    priceId: stripeMode === "test" ? "price_1TZiUsByXBrHdKMKuZVgZOyj" : "price_1TZiUsByXBrHdKMKuZVgZOyj",
+    mode: "payment",
+    type: "keys",
+    quantity: 50,
+    label: "50 Keys",
+  },
+  "keys-100-usd": {
+    id: "keys-100-usd",
+    priceId: stripeMode === "test" ? "price_1TZiUsByXBrHdKMKmtVLso5g" : "price_1TZiUsByXBrHdKMKmtVLso5g",
+    mode: "payment",
+    type: "keys",
+    quantity: 100,
+    label: "100 Keys",
   },
   starter: {
     id: "starter",
-    priceId: stripeMode === "test" ? "price_1TZLBwByXBrHdKMK55ZlT254" : "price_1TZKo1ByXBrHdKMKfdQVOVil",
+    priceId: stripeMode === "test" ? "price_1TZiW4ByXBrHdKMKFzK7clbP" : "price_1TZiW4ByXBrHdKMKFzK7clbP",
     mode: "payment",
     type: "bundle",
     quantity: 1,
@@ -30,7 +70,7 @@ export const STRIPE_SHOP_ITEMS: Record<StripeShopItemId, StripeShopItem> = {
   },
   adfree: {
     id: "adfree",
-    priceId: stripeMode === "test" ? "price_1TZLBwByXBrHdKMK9O1FGMWu" : "price_1TZKo2ByXBrHdKMK9NCMRMA8",
+    priceId: "price_placeholder_adfree",
     mode: "payment",
     type: "adFree",
     quantity: 1,
@@ -38,7 +78,7 @@ export const STRIPE_SHOP_ITEMS: Record<StripeShopItemId, StripeShopItem> = {
   },
   plus: {
     id: "plus",
-    priceId: stripeMode === "test" ? "price_1TZLBwByXBrHdKMKZ2URmrRU" : "price_1TZKo7ByXBrHdKMKj2aP9cpW",
+    priceId: stripeMode === "test" ? "price_1TZiW4ByXBrHdKMKXj6lRijV" : "price_1TZiW4ByXBrHdKMKXj6lRijV",
     mode: "subscription",
     type: "subscription",
     quantity: 1,

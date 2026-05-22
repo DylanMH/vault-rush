@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Gem, KeyRound, Heart, AlertTriangle, X, Info, Sparkles, User, Box, Hexagon, Star, Crosshair } from "lucide-react";
+import { Gem, KeyRound, Heart, AlertTriangle, X, Info, Sparkles, User, Box, Hexagon, Star, Crosshair, Calendar } from "lucide-react";
 import Image from "next/image";
 import { Player, RunState, VaultOutcome } from "@/types/game";
 import { formatNumber } from "@/lib/utils";
@@ -211,6 +211,25 @@ export default function VaultRunScreen({
             <Info size={22} />
           </button>
         </div>
+
+        {/* Daily Reward Reminder */}
+        {(() => {
+          const todayIso = new Date().toISOString().split('T')[0];
+          const lastIso = player.lastDailyClaim ? new Date(player.lastDailyClaim).toISOString().split('T')[0] : null;
+          const canClaimDaily = lastIso !== todayIso;
+          if (!canClaimDaily) return null;
+          return (
+            <div className="px-4 pt-3">
+              <div className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-vault-gold/10 border border-vault-gold/30 animate-pulse-slow">
+                <div className="flex items-center gap-2">
+                  <Calendar size={16} className="text-vault-gold" />
+                  <span className="text-xs font-bold text-vault-gold">Daily Reward Available!</span>
+                </div>
+                <span className="text-[10px] text-vault-gold/70">Claim from home screen</span>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Status + Risk */}
         <div className="px-4 py-4 border-b border-vault-700">
