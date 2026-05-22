@@ -5,7 +5,7 @@ import { Gem, KeyRound, Heart, AlertTriangle, X, Info, Sparkles, User, Box, Hexa
 import Image from "next/image";
 import { Player, RunState, VaultOutcome } from "@/types/game";
 import { formatNumber } from "@/lib/utils";
-import { getRiskPercent, VAULT_ODDS, getActiveCosmeticBonuses, OUTCOME_BASE_LABELS, COSMETIC_BONUSES } from "@/lib/gameLogic";
+import { getRiskPercent, VAULT_ODDS, getActiveCosmeticBonuses, applyOddsBonuses, OUTCOME_BASE_LABELS, COSMETIC_BONUSES } from "@/lib/gameLogic";
 import { useSound } from "@/hooks/useSound";
 import confetti from "canvas-confetti";
 
@@ -75,7 +75,7 @@ interface VaultRunScreenProps {
   showOutcome: boolean;
   onOpenVault: () => void;
   onBankRewards: () => void;
-  onUseRevive: () => void;
+  onUseRevive: () => void | Promise<void>;
   onAbandonRun: () => void;
   onCancelRun: () => void;
   setShowOutcome: (v: boolean) => void;
@@ -175,7 +175,7 @@ export default function VaultRunScreen({
     }, 500);
   };
 
-  const risk = getRiskPercent(run.currentVault);
+  const risk = getRiskPercent(run.currentVault, player);
 
   return (
     <div className="flex flex-col min-h-screen bg-vault-900 relative">
@@ -261,6 +261,12 @@ export default function VaultRunScreen({
                 {run.history.reduce((s, h) => s + (h.keys || 0), 0)} Keys
               </span>
             </div>
+            <div className="flex items-center gap-1.5">
+              <Heart size={12} className="text-red-400" />
+              <span className="text-xs text-red-400 font-bold">
+                {run.history.reduce((s, h) => s + (h.type === "bonusLife" ? 1 : 0), 0)} Lives
+              </span>
+            </div>
           </div>
 
           <div className="flex items-center gap-2 mt-2">
@@ -275,7 +281,7 @@ export default function VaultRunScreen({
             {/* Avatar */}
             <div className="flex items-center gap-2">
               <div className="relative w-8 h-8 rounded-lg overflow-hidden border border-vault-600 shrink-0">
-                <Image src={getAvatarImage(player.activeAvatar)} alt="avatar" fill className="object-cover" sizes="32px" />
+                <Image src={getAvatarImage(player.activeAvatar)} alt="avatar" fill className="object-cover" sizes="32px" priority />
               </div>
               <p className="text-[10px] text-vault-gold font-semibold leading-tight">
                 {formatCompactBonusesForId(player.activeAvatar)}
@@ -284,7 +290,7 @@ export default function VaultRunScreen({
             {/* Banner */}
             <div className="flex items-center gap-2">
               <div className="relative w-8 h-8 rounded-lg overflow-hidden border border-vault-600 shrink-0">
-                <Image src={getBannerImage(player.activeBadgeFrame)} alt="banner" fill className="object-cover" sizes="32px" />
+                <Image src={getBannerImage(player.activeBadgeFrame)} alt="banner" fill className="object-cover" sizes="32px" priority />
               </div>
               <p className="text-[10px] text-vault-gold font-semibold leading-tight">
                 {formatCompactBonusesForId(player.activeBadgeFrame)}
@@ -410,11 +416,11 @@ export default function VaultRunScreen({
           <div className="flex flex-col gap-2">
             {player.reviveTokens > 0 && !run.reviveUsed ? (
               <button
-                onClick={() => {
+                onClick={async () => {
                   if (processing.current) return;
                   processing.current = true;
                   sound.playClick();
-                  onUseRevive();
+                  await Promise.resolve(onUseRevive());
                   processing.current = false;
                 }}
                 className="w-full py-4 rounded-2xl font-bold text-lg bg-gradient-to-r from-vault-accent to-vault-accentLight text-white shadow-lg active:scale-[0.98] transition"
@@ -490,43 +496,71 @@ export default function VaultRunScreen({
       {showOdds && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
           <div className="bg-vault-800 rounded-2xl w-full max-w-sm p-5 border border-vault-700">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold">Vault Odds</h3>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-lg font-bold">Vault {run.currentVault} Odds</h3>
               <button onClick={() => setShowOdds(false)}>
                 <X size={20} className="text-vault-400" />
               </button>
             </div>
-            <div className="space-y-4 max-h-[60vh] overflow-y-auto scrollbar-hide">
-              {Object.entries(VAULT_ODDS).map(([vaultNum, odds]) => (
-                <div key={vaultNum}>
-                  <p className="text-xs font-bold text-vault-gold uppercase mb-1">
-                    Vault {vaultNum}
-                  </p>
+            {(() => {
+              const bonuses = getActiveCosmeticBonuses(player);
+              const baseOdds = VAULT_ODDS[run.currentVault] ?? VAULT_ODDS[Math.max(...Object.keys(VAULT_ODDS).map(Number))];
+              const adjusted = applyOddsBonuses(baseOdds, bonuses);
+              const hasBonuses = bonuses.jackpotChanceBonus > 0 || bonuses.mediumGemChanceBonus > 0 || bonuses.trapReduction > 0;
+              const totalChance = adjusted.reduce((s, o) => s + o.chance, 0);
+              return (
+                <>
+                  {hasBonuses && (
+                    <p className="text-xs text-vault-gold mb-3">
+                      Your cosmetics are changing these odds!
+                    </p>
+                  )}
                   <div className="space-y-1">
-                    {odds.map((o) => (
-                      <div
-                        key={o.type}
-                        className="flex items-center justify-between text-sm"
-                      >
-                        <span className="text-vault-300">
-                          {o.type.replace(/([A-Z])/g, " $1").trim()}
-                          <span className="text-vault-500 text-xs ml-1">({OUTCOME_BASE_LABELS[o.type]})</span>
-                        </span>
-                        <span
-                          className={`font-bold ${
-                            o.type === "trap"
-                              ? "text-vault-danger"
-                              : "text-white"
-                          }`}
+                    {adjusted.map((o) => {
+                      const base = baseOdds.find((b) => b.type === o.type);
+                      const pct = totalChance > 0 ? ((o.chance / totalChance) * 100).toFixed(1) : "0.0";
+                      const changed = base && base.chance !== o.chance;
+                      return (
+                        <div
+                          key={o.type}
+                          className="flex items-center justify-between text-sm py-1"
                         >
-                          {o.chance}%
-                        </span>
-                      </div>
-                    ))}
+                          <span className="text-vault-300">
+                            {o.type.replace(/([A-Z])/g, " $1").trim()}
+                            <span className="text-vault-500 text-xs ml-1">({OUTCOME_BASE_LABELS[o.type]})</span>
+                          </span>
+                          <div className="text-right">
+                            <span
+                              className={`font-bold ${
+                                o.type === "trap"
+                                  ? "text-vault-danger"
+                                  : o.type === "jackpot"
+                                  ? "text-vault-gem"
+                                  : "text-white"
+                              }`}
+                            >
+                              {pct}%
+                            </span>
+                            {changed && base && (
+                              <span className="text-vault-500 text-xs ml-1.5">
+                                ({base.chance}% base)
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                </div>
-              ))}
-            </div>
+                  {hasBonuses && (
+                    <div className="mt-3 pt-3 border-t border-vault-700/50 text-xs text-vault-400">
+                      {bonuses.jackpotChanceBonus > 0 && <p>+{bonuses.jackpotChanceBonus}% jackpot chance (from cosmetics)</p>}
+                      {bonuses.mediumGemChanceBonus > 0 && <p>+{bonuses.mediumGemChanceBonus}% medium gem chance (from cosmetics)</p>}
+                      {bonuses.trapReduction > 0 && <p>-{bonuses.trapReduction}% trap chance (from cosmetics)</p>}
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
         </div>
       )}

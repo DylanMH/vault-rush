@@ -104,6 +104,7 @@ function ShopSuccessPageInner() {
 function getItemLabel(type: string, qty: number) {
   switch (type) {
     case "gems": return `+${qty} Gems added to your account`;
+    case "keys": return `+${qty} Keys added to your account`;
     case "bundle": return "Starter Bundle added: 10 keys, 2 revives, 100 gems";
     case "adFree": return "Ad-Free Upgrade activated!";
     case "subscription": return "Vault Rush Plus active! +10 keys, +1000 gems, +5 revives, exclusive skin unlocked!";

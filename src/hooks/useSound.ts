@@ -1,24 +1,54 @@
 "use client";
 
-function play(src: string, volume = 0.5) {
+const SOUNDS: Record<string, { src: string; volume: number }> = {
+  click: { src: "/sounds/button-press.wav", volume: 0.4 },
+  winSmall: { src: "/sounds/small-win.wav", volume: 0.5 },
+  winMedium: { src: "/sounds/medium-win.wav", volume: 0.5 },
+  winLarge: { src: "/sounds/large-win.wav", volume: 0.5 },
+  jackpot: { src: "/sounds/jackpot-win.wav", volume: 0.6 },
+  lose: { src: "/sounds/lose.wav", volume: 0.6 },
+  bank: { src: "/sounds/bank-button.wav", volume: 0.5 },
+  levelUp: { src: "/sounds/level-up.wav", volume: 0.5 },
+  shardJackpot: { src: "/sounds/cosmetic-shard-jackpot.wav", volume: 0.6 },
+  purchase: { src: "/sounds/store-purchase.wav", volume: 0.5 },
+};
+
+// Audio pool: one element per sound, reused
+const pool: Record<string, HTMLAudioElement> = {};
+let preloaded = false;
+
+function preload() {
+  if (preloaded || typeof window === "undefined") return;
+  preloaded = true;
+  for (const key of Object.keys(SOUNDS)) {
+    const { src, volume } = SOUNDS[key];
+    const audio = new Audio(src);
+    audio.preload = "auto";
+    audio.volume = volume;
+    pool[key] = audio;
+  }
+}
+
+function play(key: string) {
   if (typeof window === "undefined") return;
-  const audio = new Audio(src);
-  audio.volume = volume;
+  if (!preloaded) preload();
+  const audio = pool[key];
+  if (!audio) return;
+  audio.currentTime = 0;
   audio.play().catch(() => {});
 }
 
 export function useSound() {
   return {
-    playClick: () => play("/sounds/button-press.wav", 0.4),
-    playWinSmall: () => play("/sounds/small-win.wav", 0.5),
-    playWinMedium: () => play("/sounds/medium-win.wav", 0.5),
-    playWinLarge: () => play("/sounds/large-win.wav", 0.5),
-    playJackpot: () => play("/sounds/jackpot-win.wav", 0.6),
-    playLose: () => play("/sounds/lose.wav", 0.6),
-    playBank: () => play("/sounds/bank-button.wav", 0.5),
-    // TODO: Add a dedicated level-up sound (e.g. from Mixkit "achievement" or "success-fanfare")
-    playLevelUp: () => play("/sounds/level-up.wav", 0.5),
-    playShardJackpot: () => play("/sounds/cosmetic-shard-jackpot.wav", 0.6),
-    playPurchase: () => play("/sounds/store-purchase.wav", 0.5),
+    playClick: () => play("click"),
+    playWinSmall: () => play("winSmall"),
+    playWinMedium: () => play("winMedium"),
+    playWinLarge: () => play("winLarge"),
+    playJackpot: () => play("jackpot"),
+    playLose: () => play("lose"),
+    playBank: () => play("bank"),
+    playLevelUp: () => play("levelUp"),
+    playShardJackpot: () => play("shardJackpot"),
+    playPurchase: () => play("purchase"),
   };
 }

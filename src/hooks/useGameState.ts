@@ -211,22 +211,23 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
   const openVault = useCallback(async () => {
     if (!run.isRunActive || run.isTrapTriggered) return;
 
+    // Always compute outcome client-side so guest and auth modes are identical
+    const outcome = resolveVault(run.currentVault, run.currentMultiplier, player);
+    setLastOutcome(outcome);
+    setShowOutcome(true);
+
     if (auth.isAuthenticated && auth.userId) {
       try {
-        const { data, error } = await supabase.rpc('open_vault');
+        const { data, error } = await supabase.rpc('open_vault', {
+          p_outcome_type: outcome.type,
+          p_gems: outcome.gems ?? 0,
+          p_multiplier_delta: outcome.multiplierDelta ?? 0,
+          p_keys: outcome.keys ?? 0,
+          p_shards: outcome.shards ?? 0,
+        });
         if (error) throw error;
         if (data && data[0]) {
           const result = data[0];
-          const outcome: VaultOutcome = {
-            type: result.outcome_type as OutcomeType,
-            label: result.label,
-            gems: result.gems || undefined,
-            multiplierDelta: result.multiplier_delta || undefined,
-            keys: result.keys || undefined,
-            shards: result.shards || undefined,
-          };
-          setLastOutcome(outcome);
-          setShowOutcome(true);
           setRun({
             ...getDefaultRunState(),
             isRunActive: true,
@@ -253,15 +254,12 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
         }
       } catch (err) {
         console.error('openVault RPC error:', err);
+        // Fall through to local application
       }
       return;
     }
 
-    // Guest fallback: client-side generation
-    const outcome = resolveVault(run.currentVault, run.currentMultiplier, player);
-    setLastOutcome(outcome);
-    setShowOutcome(true);
-
+    // Guest fallback: client-side application
     setRun((prev) => {
       const next: RunState = {
         ...prev,
@@ -397,8 +395,35 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
     }
   }, [run, addXp, auth, player]);
 
-  const useRevive = useCallback(() => {
+  const useRevive = useCallback(async () => {
     if (!run.isTrapTriggered || player.reviveTokens < 1 || run.reviveUsed) return;
+
+    if (auth.isAuthenticated && auth.userId) {
+      try {
+        const { data, error } = await supabase.rpc('use_revive');
+        if (error) throw error;
+        if (data && data[0]) {
+          const result = data[0];
+          setRun((prev) => ({
+            ...prev,
+            isTrapTriggered: result.is_trap_triggered,
+            reviveUsed: result.revive_used,
+          }));
+          setPlayer((prev) => ({
+            ...prev,
+            reviveTokens: result.revive_tokens,
+          }));
+          setLastOutcome(null);
+          setShowOutcome(false);
+          return;
+        }
+      } catch (err) {
+        console.error('useRevive RPC error:', err);
+        // Fall through to local
+      }
+    }
+
+    // Guest / fallback
     setPlayer((prev) => {
       const next = { ...prev, reviveTokens: Math.max(0, prev.reviveTokens - 1) };
       return next;
@@ -410,7 +435,7 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
     }));
     setLastOutcome(null);
     setShowOutcome(false);
-  }, [run.isTrapTriggered, run.reviveUsed, player.reviveTokens]);
+  }, [run.isTrapTriggered, run.reviveUsed, player.reviveTokens, auth.isAuthenticated, auth.userId]);
 
   const abandonRun = useCallback(() => {
     const vaultCount = run.currentVault - 1;
@@ -504,6 +529,10 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
         try {
           const { data, error } = await supabase.rpc('purchase_item', {
             p_cost: item.price,
+            p_keys: item.type === "keys" ? item.quantity : 0,
+            p_revive_tokens: item.type === "reviveTokens" ? item.quantity : 0,
+            p_shards: item.type === "shards" ? item.quantity : 0,
+            p_gems: item.type === "gems" ? item.quantity : 0,
           });
 
           if (error) throw error;
@@ -512,23 +541,14 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
             const result = data[0];
             if (!result.success) return false;
 
-            // Server confirmed purchase, now apply item effects locally
-            setPlayer((prev) => {
-              const next = { ...prev, gems: result.gems };
-              switch (item.type) {
-                case "keys": next.keys = prev.keys + item.quantity; break;
-                case "reviveTokens": next.reviveTokens = prev.reviveTokens + item.quantity; break;
-                case "gems": next.gems = prev.gems + item.quantity; break;
-                case "shards": next.cosmeticShards = prev.cosmeticShards + item.quantity; break;
-                case "bundle":
-                  next.keys = prev.keys + 10;
-                  next.reviveTokens = prev.reviveTokens + 2;
-                  next.gems = prev.gems + 100;
-                  break;
-                case "subscription": next.isSubscribed = true; break;
-              }
-              return next;
-            });
+            // Server confirmed purchase and granted items
+            setPlayer((prev) => ({
+              ...prev,
+              gems: result.gems,
+              keys: result.keys,
+              reviveTokens: result.revive_tokens,
+              cosmeticShards: result.cosmetic_shards,
+            }));
             return true;
           }
         } catch (err) {

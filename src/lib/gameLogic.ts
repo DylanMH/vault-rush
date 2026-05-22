@@ -47,96 +47,99 @@ export function getActiveCosmeticBonuses(player: Player): CosmeticBonuses {
 
 export const VAULT_ODDS: Record<number, VaultOdds[]> = {
   1: [
-    { type: "smallGems", chance: 65 },
+    { type: "smallGems", chance: 55 },
     { type: "mediumGems", chance: 20 },
-    { type: "multiplier", chance: 10 },
+    { type: "multiplier", chance: 20 },
     { type: "bonusKey", chance: 3 },
     { type: "trap", chance: 2 },
   ],
   2: [
-    { type: "smallGems", chance: 42 },
-    { type: "mediumGems", chance: 25 },
-    { type: "multiplier", chance: 15 },
+    { type: "smallGems", chance: 34 },
+    { type: "mediumGems", chance: 23 },
+    { type: "multiplier", chance: 20 },
     { type: "bonusKey", chance: 4 },
     { type: "cosmeticShard", chance: 5 },
+    { type: "bonusLife", chance: 5 },
     { type: "trap", chance: 9 },
   ],
   3: [
-    { type: "smallGems", chance: 27 },
-    { type: "mediumGems", chance: 28 },
+    { type: "smallGems", chance: 20 },
+    { type: "mediumGems", chance: 27 },
     { type: "bigGems", chance: 10 },
-    { type: "multiplier", chance: 15 },
+    { type: "multiplier", chance: 18 },
     { type: "bonusKey", chance: 3 },
     { type: "cosmeticShard", chance: 6 },
-    { type: "bonusLife", chance: 1 },
+    { type: "bonusLife", chance: 6 },
     { type: "trap", chance: 10 },
   ],
   4: [
-    { type: "mediumGems", chance: 26 },
-    { type: "bigGems", chance: 18 },
-    { type: "multiplier", chance: 18 },
+    { type: "mediumGems", chance: 15 },
+    { type: "bigGems", chance: 12 },
+    { type: "smallGems", chance: 5 },
+    { type: "multiplier", chance: 15 },
     { type: "bonusKey", chance: 3 },
-    { type: "cosmeticShard", chance: 10 },
-    { type: "jackpot", chance: 11 },
-    { type: "shardJackpot", chance: 2 },
+    { type: "cosmeticShard", chance: 12 },
+    { type: "bonusLife", chance: 12 },
+    { type: "jackpot", chance: 9 },
+    { type: "shardJackpot", chance: 5 },
     { type: "trap", chance: 12 },
   ],
   5: [
-    { type: "smallGems", chance: 12 },
-    { type: "bigGems", chance: 27 },
+    { type: "smallGems", chance: 3 },
+    { type: "bigGems", chance: 18 },
     { type: "cosmeticShard", chance: 12 },
-    { type: "jackpot", chance: 15 },
-    { type: "multiplier", chance: 16 },
-    { type: "bonusLife", chance: 1 },
-    { type: "shardJackpot", chance: 2 },
+    { type: "bonusLife", chance: 12 },
+    { type: "jackpot", chance: 11 },
+    { type: "multiplier", chance: 14 },
+    { type: "shardJackpot", chance: 5 },
     { type: "trap", chance: 15 },
   ],
   6: [
-    { type: "mediumGems", chance: 11 },
-    { type: "bigGems", chance: 31 },
-    { type: "cosmeticShard", chance: 10 },
-    { type: "jackpot", chance: 16 },
-    { type: "multiplier", chance: 10 },
-    { type: "bonusLife", chance: 1 },
-    { type: "shardJackpot", chance: 2 },
+    { type: "mediumGems", chance: 8 },
+    { type: "bigGems", chance: 22 },
+    { type: "cosmeticShard", chance: 12 },
+    { type: "bonusLife", chance: 12 },
+    { type: "jackpot", chance: 11 },
+    { type: "multiplier", chance: 11 },
+    { type: "shardJackpot", chance: 5 },
     { type: "trap", chance: 19 },
   ],
   7: [
     { type: "mediumGems", chance: 6 },
-    { type: "bigGems", chance: 34 },
-    { type: "cosmeticShard", chance: 8 },
-    { type: "jackpot", chance: 18 },
-    { type: "multiplier", chance: 8 },
-    { type: "bonusLife", chance: 1 },
-    { type: "shardJackpot", chance: 2 },
-    { type: "trap", chance: 23 },
+    { type: "bigGems", chance: 23 },
+    { type: "cosmeticShard", chance: 10 },
+    { type: "bonusLife", chance: 10 },
+    { type: "jackpot", chance: 13 },
+    { type: "multiplier", chance: 10 },
+    { type: "shardJackpot", chance: 5 },
+    { type: "trap", chance: 20 },
   ],
   8: [
-    { type: "bigGems", chance: 36 },
-    { type: "cosmeticShard", chance: 5 },
-    { type: "jackpot", chance: 20 },
-    { type: "multiplier", chance: 8 },
-    { type: "bonusLife", chance: 1 },
-    { type: "shardJackpot", chance: 2 },
-    { type: "trap", chance: 28 },
+    { type: "bigGems", chance: 26 },
+    { type: "cosmeticShard", chance: 10 },
+    { type: "bonusLife", chance: 10 },
+    { type: "jackpot", chance: 14 },
+    { type: "multiplier", chance: 14 },
+    { type: "shardJackpot", chance: 4 },
+    { type: "trap", chance: 22 },
   ],
   9: [
-    { type: "bigGems", chance: 33 },
-    { type: "cosmeticShard", chance: 3 },
-    { type: "jackpot", chance: 22 },
-    { type: "multiplier", chance: 6 },
-    { type: "bonusLife", chance: 1 },
-    { type: "shardJackpot", chance: 2 },
-    { type: "trap", chance: 33 },
+    { type: "bigGems", chance: 22 },
+    { type: "cosmeticShard", chance: 12 },
+    { type: "bonusLife", chance: 10 },
+    { type: "jackpot", chance: 14 },
+    { type: "multiplier", chance: 13 },
+    { type: "shardJackpot", chance: 5 },
+    { type: "trap", chance: 24 },
   ],
   10: [
-    { type: "bigGems", chance: 28 },
-    { type: "cosmeticShard", chance: 1 },
-    { type: "jackpot", chance: 26 },
-    { type: "multiplier", chance: 4 },
-    { type: "bonusLife", chance: 1 },
-    { type: "shardJackpot", chance: 2 },
-    { type: "trap", chance: 38 },
+    { type: "bigGems", chance: 18 },
+    { type: "cosmeticShard", chance: 12 },
+    { type: "bonusLife", chance: 8 },
+    { type: "jackpot", chance: 14 },
+    { type: "multiplier", chance: 15 },
+    { type: "shardJackpot", chance: 5 },
+    { type: "trap", chance: 28 },
   ],
 };
 
@@ -150,7 +153,7 @@ function weightedRandom(odds: VaultOdds[]): OutcomeType {
   return odds[odds.length - 1].type;
 }
 
-function applyOddsBonuses(odds: VaultOdds[], bonuses: CosmeticBonuses): VaultOdds[] {
+export function applyOddsBonuses(odds: VaultOdds[], bonuses: CosmeticBonuses): VaultOdds[] {
   const adjusted = odds.map((o) => ({ ...o }));
 
   // Boost jackpot chance
@@ -212,7 +215,7 @@ export const OUTCOME_BASE_LABELS: Record<OutcomeType, string> = {
   bonusKey: "1 key",
   cosmeticShard: "2 shards",
   trap: "Lose all",
-  jackpot: "500 gems",
+  jackpot: "350 gems",
   bonusLife: "15 gems + 1 life",
   shardJackpot: "25 shards",
 };
@@ -241,7 +244,7 @@ export function resolveVault(vaultNumber: number, multiplier: number, player: Pl
     case "trap":
       return { type, label: "TRAP!", gems: 0 };
     case "jackpot":
-      return { type, label: "JACKPOT!", gems: Math.round(500 * multiplier * bonuses.gemMultiplier) };
+      return { type, label: "JACKPOT!", gems: Math.round(350 * multiplier * bonuses.gemMultiplier) };
     case "bonusLife":
       return { type, label: "Bonus Life!", gems: Math.round(15 * multiplier * bonuses.gemMultiplier) };
     case "shardJackpot":
@@ -251,10 +254,14 @@ export function resolveVault(vaultNumber: number, multiplier: number, player: Pl
   }
 }
 
-export function getRiskPercent(vaultNumber: number): number {
-  const odds = VAULT_ODDS[vaultNumber] ?? VAULT_ODDS[5];
-  const trap = odds.find((o) => o.type === "trap");
-  return trap ? trap.chance : 30;
+export function getRiskPercent(vaultNumber: number, player?: Player): number {
+  const maxVault = Math.max(...Object.keys(VAULT_ODDS).map(Number));
+  const odds = VAULT_ODDS[vaultNumber] ?? VAULT_ODDS[maxVault];
+  const adjusted = player ? applyOddsBonuses(odds, getActiveCosmeticBonuses(player)) : odds;
+  const trap = adjusted.find((o) => o.type === "trap");
+  if (!trap) return 30;
+  const total = adjusted.reduce((s, o) => s + o.chance, 0);
+  return total > 0 ? Math.round((trap.chance / total) * 100) : 30;
 }
 
 export function xpForLevel(level: number): number {

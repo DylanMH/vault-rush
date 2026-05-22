@@ -82,6 +82,7 @@ async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
 
 function getFulfillmentUpdates(item: (typeof STRIPE_SHOP_ITEMS)[StripeShopItemId]) {
   if (item.type === "gems") return { gems: item.quantity };
+  if (item.type === "keys") return { keys: item.quantity };
   if (item.type === "bundle") return { gems: 100, keys: 10, revive_tokens: 2 };
   if (item.type === "adFree") return { is_ad_free: true };
   return {

@@ -14,7 +14,7 @@ function getAudio(): HTMLAudioElement {
   if (!globalAudio) {
     globalAudio = new Audio(MUSIC_SRC);
     globalAudio.loop = true;
-    globalAudio.preload = "auto";
+    globalAudio.preload = "metadata";
     globalAudio.volume = MENU_VOLUME;
   }
   return globalAudio;
