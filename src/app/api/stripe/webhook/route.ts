@@ -58,50 +58,26 @@ async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
   if (existingError) throw existingError;
   if (existing?.status === "fulfilled") return;
 
-  const { error: upsertError } = await supabaseAdmin.from("purchases").upsert(
-    {
-      stripe_session_id: session.id,
-      stripe_payment_intent_id: typeof session.payment_intent === "string" ? session.payment_intent : null,
-      stripe_subscription_id: typeof session.subscription === "string" ? session.subscription : null,
-      user_id: userId,
-      item_id: item.id,
-      item_type: item.type,
-      quantity: item.quantity,
-      status: "processing",
-    },
-    { onConflict: "stripe_session_id" }
-  );
-
-  if (upsertError) throw upsertError;
-
-  const { data: player, error: playerError } = await supabaseAdmin
-    .from("players")
-    .select("gems, keys, revive_tokens, owned_cosmetics")
-    .eq("user_id", userId)
-    .single();
-
-  if (playerError) throw playerError;
-
   const updates = getFulfillmentUpdates(item);
-  const { error: updateError } = await supabaseAdmin
-    .from("players")
-    .update({
-      ...updates,
-      gems: (player.gems || 0) + (updates.gems || 0),
-      keys: (player.keys || 0) + (updates.keys || 0),
-      revive_tokens: (player.revive_tokens || 0) + (updates.revive_tokens || 0),
-      owned_cosmetics: mergeCosmetics(player.owned_cosmetics || [], updates.owned_cosmetics),
-    })
-    .eq("user_id", userId);
 
-  if (updateError) throw updateError;
+  const { error: rpcError } = await supabaseAdmin.rpc("fulfill_purchase", {
+    p_user_id: userId,
+    p_session_id: session.id,
+    p_item_id: item.id,
+    p_item_type: item.type,
+    p_quantity: item.quantity,
+    p_gems: updates.gems || 0,
+    p_keys: updates.keys || 0,
+    p_revive_tokens: updates.revive_tokens || 0,
+    p_is_ad_free: updates.is_ad_free ?? null,
+    p_is_subscribed: updates.is_subscribed ?? null,
+    p_subscription_expiry: updates.subscription_expiry ?? null,
+    p_owned_cosmetics: updates.owned_cosmetics ?? null,
+    p_active_vault_skin: updates.active_vault_skin ?? null,
+    p_active_avatar: updates.active_avatar ?? null,
+  });
 
-  const { error: fulfilledError } = await supabaseAdmin
-    .from("purchases")
-    .update({ status: "fulfilled", fulfilled_at: new Date().toISOString() })
-    .eq("stripe_session_id", session.id);
-
-  if (fulfilledError) throw fulfilledError;
+  if (rpcError) throw rpcError;
 }
 
 function getFulfillmentUpdates(item: (typeof STRIPE_SHOP_ITEMS)[StripeShopItemId]) {
@@ -120,7 +96,3 @@ function getFulfillmentUpdates(item: (typeof STRIPE_SHOP_ITEMS)[StripeShopItemId
   };
 }
 
-function mergeCosmetics(current: string[], added?: string[]) {
-  if (!added?.length) return current;
-  return Array.from(new Set([...current, ...added]));
-}
