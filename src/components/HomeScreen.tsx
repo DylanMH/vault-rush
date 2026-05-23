@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import {
   Gem,
   KeyRound,
@@ -20,6 +21,19 @@ import { Screen } from "@/hooks/useGameState";
 import { getDailyEvent } from "@/lib/gameLogic";
 import { useSound } from "@/hooks/useSound";
 import LegalModal from "./LegalModal";
+
+function getAvatarImage(avatarId: string): string {
+  const map: Record<string, string> = {
+    "avatar-basic": "/assets/avatars/basic-avatar.png",
+    "avatar-champion": "/assets/avatars/champion-avatar.png",
+    "avatar-galaxy": "/assets/avatars/galaxy-avatar.png",
+    "avatar-pirate": "/assets/avatars/pirate-avatar.png",
+    "avatar-joker": "/assets/avatars/joker-avatar.png",
+    "avatar-shadow": "/assets/avatars/shadow-avatar.png",
+    "avatar-dragon": "/assets/avatars/dragon-avatar.png",
+  };
+  return map[avatarId] || "/assets/avatars/basic-avatar.png";
+}
 
 interface HomeScreenProps {
   player: Player;
@@ -85,9 +99,12 @@ export default function HomeScreen({
               sound.playClick();
               onNavigate("profile");
             }}
-            className="text-xs text-vault-400 hover:text-white transition"
+            className="flex items-center gap-2 bg-vault-800 hover:bg-vault-700 border border-vault-600 hover:border-vault-gold/50 rounded-full pl-1.5 pr-3 py-1 transition active:scale-[0.97]"
           >
-            Profile
+            <div className="relative w-7 h-7 rounded-full overflow-hidden border border-vault-600 shrink-0">
+              <Image src={getAvatarImage(player.activeAvatar)} alt="avatar" fill className="object-cover" sizes="28px" priority />
+            </div>
+            <span className="text-xs font-bold text-vault-gold">Profile</span>
           </button>
         </div>
       </div>

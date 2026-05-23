@@ -5,7 +5,7 @@ import { Gem, KeyRound, Heart, AlertTriangle, X, Info, Sparkles, User, Box, Hexa
 import Image from "next/image";
 import { Player, RunState, VaultOutcome } from "@/types/game";
 import { formatNumber } from "@/lib/utils";
-import { getRiskPercent, VAULT_ODDS, getActiveCosmeticBonuses, applyOddsBonuses, OUTCOME_BASE_LABELS, COSMETIC_BONUSES } from "@/lib/gameLogic";
+import { getRiskPercent, VAULT_WEIGHTS, getActiveCosmeticBonuses, applyCosmeticBonusesToWeights, normalizeWeightsToPercentages, OUTCOME_BASE_LABELS, COSMETIC_BONUSES } from "@/lib/gameLogic";
 import { useSound } from "@/hooks/useSound";
 import confetti from "canvas-confetti";
 
@@ -53,9 +53,10 @@ function formatCompactBonusesForId(id: string): string {
   if (!b) return "No bonuses";
   const parts: string[] = [];
   if (b.gemMultiplier > 1) parts.push(`${b.gemMultiplier.toFixed(1)}x Gems`);
-  if (b.jackpotChanceBonus > 0) parts.push(`+${b.jackpotChanceBonus}% Jackpot`);
-  if (b.mediumGemChanceBonus > 0) parts.push(`+${b.mediumGemChanceBonus}% Med`);
-  if (b.trapReduction > 0) parts.push(`-${b.trapReduction}% Trap`);
+  if (b.jackpotWeightBonus > 0) parts.push(`+${b.jackpotWeightBonus} Jackpot Chance`);
+  if (b.mediumGemWeightBonus > 0) parts.push(`+${b.mediumGemWeightBonus} Med Gem Chance`);
+  if (b.bigGemWeightBonus > 0) parts.push(`+${b.bigGemWeightBonus} Big Gem Chance`);
+  if (b.trapWeightReduction > 0) parts.push(`-${b.trapWeightReduction} Trap Chance`);
   if (b.shardMultiplier > 1) parts.push(`${b.shardMultiplier.toFixed(1)}x Shard`);
   if (b.xpMultiplier > 1) parts.push(`+${Math.round((b.xpMultiplier - 1) * 100)}% XP`);
   if (b.reviveTokenBonus > 0) parts.push(`+${b.reviveTokenBonus} Revive`);
@@ -204,8 +205,8 @@ export default function VaultRunScreen({
               <Heart size={14} className="text-red-400" />
               <span className="text-sm font-bold">{player.reviveTokens}</span>
             </div>
-            <div className="flex items-center gap-1" title={`Avatar: ${player.activeAvatar.replace('avatar-', '')}`}>
-              <User size={16} className="text-vault-gem" />
+            <div className="relative w-7 h-7 rounded-full overflow-hidden border border-vault-600 shrink-0" title={`Avatar: ${player.activeAvatar.replace('avatar-', '')}`}>
+              <Image src={getAvatarImage(player.activeAvatar)} alt="avatar" fill className="object-cover" sizes="28px" priority />
             </div>
           </div>
           <button onClick={() => { sound.playClick(); setShowOdds(true); }} className="text-vault-400 hover:text-vault-gold transition">
@@ -500,46 +501,48 @@ export default function VaultRunScreen({
             </div>
             {(() => {
               const bonuses = getActiveCosmeticBonuses(player);
-              const baseOdds = VAULT_ODDS[run.currentVault] ?? VAULT_ODDS[Math.max(...Object.keys(VAULT_ODDS).map(Number))];
-              const adjusted = applyOddsBonuses(baseOdds, bonuses);
-              const hasBonuses = bonuses.jackpotChanceBonus > 0 || bonuses.mediumGemChanceBonus > 0 || bonuses.trapReduction > 0;
-              const totalChance = adjusted.reduce((s, o) => s + o.chance, 0);
+              const baseWeights = VAULT_WEIGHTS[run.currentVault] ?? VAULT_WEIGHTS[Math.max(...Object.keys(VAULT_WEIGHTS).map(Number))];
+              const finalWeights = applyCosmeticBonusesToWeights(baseWeights, bonuses);
+              const basePct = normalizeWeightsToPercentages(baseWeights);
+              const finalPct = normalizeWeightsToPercentages(finalWeights);
+              const hasOddsBonuses = bonuses.jackpotWeightBonus > 0 || bonuses.mediumGemWeightBonus > 0 || bonuses.bigGemWeightBonus > 0 || bonuses.trapWeightReduction > 0 || bonuses.shardWeightBonus > 0 || bonuses.bonusKeyWeightBonus > 0 || bonuses.reviveTokenWeightBonus > 0;
+              const outcomes = Object.entries(finalWeights).filter(([, w]) => w > 0) as [keyof typeof finalWeights, number][];
               return (
                 <>
-                  {hasBonuses && (
+                  {hasOddsBonuses && (
                     <p className="text-xs text-vault-gold mb-3">
                       Your cosmetics are changing these odds!
                     </p>
                   )}
                   <div className="space-y-1">
-                    {adjusted.map((o) => {
-                      const base = baseOdds.find((b) => b.type === o.type);
-                      const pct = totalChance > 0 ? ((o.chance / totalChance) * 100).toFixed(1) : "0.0";
-                      const changed = base && base.chance !== o.chance;
+                    {outcomes.map(([type]) => {
+                      const pct = finalPct[type]?.toFixed(1) ?? "0.0";
+                      const baseVal = basePct[type]?.toFixed(1) ?? "0.0";
+                      const changed = baseWeights[type] !== finalWeights[type];
                       return (
                         <div
-                          key={o.type}
+                          key={type}
                           className="flex items-center justify-between text-sm py-1"
                         >
                           <span className="text-vault-300">
-                            {o.type.replace(/([A-Z])/g, " $1").trim()}
-                            <span className="text-vault-500 text-xs ml-1">({OUTCOME_BASE_LABELS[o.type]})</span>
+                            {String(type).replace(/([A-Z])/g, " $1").trim()}
+                            <span className="text-vault-500 text-xs ml-1">({OUTCOME_BASE_LABELS[type]})</span>
                           </span>
                           <div className="text-right">
                             <span
                               className={`font-bold ${
-                                o.type === "trap"
+                                type === "trap"
                                   ? "text-vault-danger"
-                                  : o.type === "jackpot"
+                                  : type === "jackpot"
                                   ? "text-vault-gem"
                                   : "text-white"
                               }`}
                             >
                               {pct}%
                             </span>
-                            {changed && base && (
+                            {changed && (
                               <span className="text-vault-500 text-xs ml-1.5">
-                                ({base.chance}% base)
+                                ({baseVal}% base)
                               </span>
                             )}
                           </div>
@@ -547,12 +550,16 @@ export default function VaultRunScreen({
                       );
                     })}
                   </div>
-                  {hasBonuses && (
+                  {hasOddsBonuses && (
                     <div className="mt-3 pt-3 border-t border-vault-700/50 text-xs text-vault-400 space-y-1">
-                      {bonuses.jackpotChanceBonus > 0 && <p>+{bonuses.jackpotChanceBonus}% jackpot chance (steals from trap)</p>}
-                      {bonuses.mediumGemChanceBonus > 0 && <p>+{bonuses.mediumGemChanceBonus}% medium gem chance (steals from trap)</p>}
-                      {bonuses.trapReduction > 0 && <p>-{bonuses.trapReduction}% trap chance (steals to small/medium gems)</p>}
-                      {bonuses.trapReduction < 0 && <p className="text-vault-danger">+{Math.abs(bonuses.trapReduction)}% trap chance (from equipped avatar)</p>}
+                      {bonuses.jackpotWeightBonus > 0 && <p>+{bonuses.jackpotWeightBonus} Jackpot Chance</p>}
+                      {bonuses.mediumGemWeightBonus > 0 && <p>+{bonuses.mediumGemWeightBonus} Medium Gem Chance</p>}
+                      {bonuses.bigGemWeightBonus > 0 && <p>+{bonuses.bigGemWeightBonus} Big Gem Chance</p>}
+                      {bonuses.shardWeightBonus > 0 && <p>+{bonuses.shardWeightBonus} Shard Chance</p>}
+                      {bonuses.bonusKeyWeightBonus > 0 && <p>+{bonuses.bonusKeyWeightBonus} Bonus Key Chance</p>}
+                      {bonuses.reviveTokenWeightBonus > 0 && <p>+{bonuses.reviveTokenWeightBonus} Revive Chance</p>}
+                      {bonuses.trapWeightReduction > 0 && <p>-{bonuses.trapWeightReduction} Trap Chance</p>}
+                      {bonuses.trapWeightReduction < 0 && <p className="text-vault-danger">+{Math.abs(bonuses.trapWeightReduction)} Trap Chance (from equipped avatar)</p>}
                     </div>
                   )}
                 </>

@@ -88,12 +88,12 @@ export default function LeaderboardScreen({ player, userId, onBack }: Leaderboar
         <h2 className="text-lg font-bold">Leaderboard</h2>
       </div>
 
-      <div className="flex gap-1 px-4 mt-3 overflow-x-auto scrollbar-hide">
+      <div className="grid grid-cols-5 gap-1.5 px-4 mt-3">
         {tabs.map((t) => (
           <button
             key={t.key}
             onClick={() => { sound.playClick(); setActiveTab(t.key); }}
-            className={`px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition ${
+            className={`py-2 rounded-lg text-[10px] sm:text-xs font-bold text-center leading-tight transition ${
               activeTab === t.key
                 ? "bg-vault-gold text-vault-900"
                 : "bg-vault-800 text-vault-400"

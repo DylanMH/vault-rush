@@ -1,32 +1,49 @@
-import { VaultOdds, VaultOutcome, OutcomeType, Player, RunState, CosmeticBonuses } from "@/types/game";
+import { VaultOutcome, OutcomeType, Player, RunState, CosmeticBonuses, RewardWeights } from "@/types/game";
+
+export const COSMETIC_BONUS_CAPS = {
+  maxGemMultiplier: 1.35,
+  maxShardMultiplier: 1.25,
+  maxXpMultiplier: 1.30,
+  maxJackpotRewardMultiplier: 1.25,
+
+  maxMediumGemWeightBonus: 10,
+  maxBigGemWeightBonus: 6,
+  maxShardWeightBonus: 8,
+  maxBonusKeyWeightBonus: 5,
+  maxReviveTokenWeightBonus: 4,
+  maxJackpotWeightBonus: 6,
+  maxTrapWeightReduction: 8,
+
+  minTrapWeight: 2,
+};
 
 export const COSMETIC_BONUSES: Record<string, CosmeticBonuses> = {
   // Vault Skins — smaller bonuses, cheapest
-  "vault-default": { gemMultiplier: 1, jackpotChanceBonus: 0, mediumGemChanceBonus: 0, trapReduction: 0, shardMultiplier: 1, xpMultiplier: 1, reviveTokenBonus: 0 },
-  "vault-blue-sapphire": { gemMultiplier: 1.1, jackpotChanceBonus: 0, mediumGemChanceBonus: 2, trapReduction: 0, shardMultiplier: 1, xpMultiplier: 1, reviveTokenBonus: 0 },
-  "vault-red-ruby": { gemMultiplier: 1, jackpotChanceBonus: 0, mediumGemChanceBonus: 0, trapReduction: 2, shardMultiplier: 1, xpMultiplier: 1, reviveTokenBonus: 0 },
-  "vault-purple-cosmic": { gemMultiplier: 1.5, jackpotChanceBonus: 5, mediumGemChanceBonus: 3, trapReduction: 0, shardMultiplier: 1, xpMultiplier: 1.05, reviveTokenBonus: 0 },
-  "vault-plus": { gemMultiplier: 1.5, jackpotChanceBonus: 0, mediumGemChanceBonus: 0, trapReduction: 0, shardMultiplier: 1, xpMultiplier: 1, reviveTokenBonus: 0 },
+  "vault-default": { gemMultiplier: 1, shardMultiplier: 1, xpMultiplier: 1, jackpotRewardMultiplier: 1, mediumGemWeightBonus: 0, bigGemWeightBonus: 0, shardWeightBonus: 0, bonusKeyWeightBonus: 0, reviveTokenWeightBonus: 0, jackpotWeightBonus: 0, trapWeightReduction: 0, reviveTokenBonus: 0 },
+  "vault-blue-sapphire": { gemMultiplier: 1.1, shardMultiplier: 1, xpMultiplier: 1, jackpotRewardMultiplier: 1.1, mediumGemWeightBonus: 2, bigGemWeightBonus: 0, shardWeightBonus: 0, bonusKeyWeightBonus: 0, reviveTokenWeightBonus: 0, jackpotWeightBonus: 0, trapWeightReduction: 0, reviveTokenBonus: 0 },
+  "vault-red-ruby": { gemMultiplier: 1, shardMultiplier: 1, xpMultiplier: 1, jackpotRewardMultiplier: 1, mediumGemWeightBonus: 0, bigGemWeightBonus: 0, shardWeightBonus: 0, bonusKeyWeightBonus: 0, reviveTokenWeightBonus: 0, jackpotWeightBonus: 0, trapWeightReduction: 2, reviveTokenBonus: 0 },
+  "vault-purple-cosmic": { gemMultiplier: 1.5, shardMultiplier: 1, xpMultiplier: 1.05, jackpotRewardMultiplier: 1.5, mediumGemWeightBonus: 3, bigGemWeightBonus: 0, shardWeightBonus: 0, bonusKeyWeightBonus: 0, reviveTokenWeightBonus: 0, jackpotWeightBonus: 5, trapWeightReduction: 0, reviveTokenBonus: 0 },
+  "vault-plus": { gemMultiplier: 1.5, shardMultiplier: 1, xpMultiplier: 1, jackpotRewardMultiplier: 1.5, mediumGemWeightBonus: 0, bigGemWeightBonus: 0, shardWeightBonus: 0, bonusKeyWeightBonus: 0, reviveTokenWeightBonus: 0, jackpotWeightBonus: 0, trapWeightReduction: 0, reviveTokenBonus: 0 },
 
   // Banners (Badge Frames) — medium bonuses, medium price
-  "banner-default": { gemMultiplier: 1, jackpotChanceBonus: 0, mediumGemChanceBonus: 0, trapReduction: 0, shardMultiplier: 1, xpMultiplier: 1, reviveTokenBonus: 0 },
-  "banner-heart": { gemMultiplier: 1, jackpotChanceBonus: 0, mediumGemChanceBonus: 0, trapReduction: 0, shardMultiplier: 1, xpMultiplier: 1, reviveTokenBonus: 1 },
-  "banner-ice": { gemMultiplier: 1, jackpotChanceBonus: 0, mediumGemChanceBonus: 0, trapReduction: 3, shardMultiplier: 1, xpMultiplier: 1, reviveTokenBonus: 0 },
-  "banner-emerald": { gemMultiplier: 1.1, jackpotChanceBonus: 0, mediumGemChanceBonus: 3, trapReduction: 0, shardMultiplier: 1, xpMultiplier: 1, reviveTokenBonus: 0 },
-  "banner-ruby": { gemMultiplier: 1.2, jackpotChanceBonus: 2, mediumGemChanceBonus: 0, trapReduction: 0, shardMultiplier: 1, xpMultiplier: 1, reviveTokenBonus: 0 },
-  "banner-diamond": { gemMultiplier: 1, jackpotChanceBonus: 5, mediumGemChanceBonus: 5, trapReduction: 0, shardMultiplier: 1, xpMultiplier: 1, reviveTokenBonus: 0 },
-  "banner-galaxy": { gemMultiplier: 1, jackpotChanceBonus: 0, mediumGemChanceBonus: 0, trapReduction: 0, shardMultiplier: 1.3, xpMultiplier: 1.08, reviveTokenBonus: 0 },
-  "banner-golden-bird": { gemMultiplier: 1, jackpotChanceBonus: 0, mediumGemChanceBonus: 0, trapReduction: 0, shardMultiplier: 1, xpMultiplier: 1.12, reviveTokenBonus: 0 },
-  "banner-champion": { gemMultiplier: 1.15, jackpotChanceBonus: 4, mediumGemChanceBonus: 3, trapReduction: 2, shardMultiplier: 1.2, xpMultiplier: 1.1, reviveTokenBonus: 0 },
+  "banner-default": { gemMultiplier: 1, shardMultiplier: 1, xpMultiplier: 1, jackpotRewardMultiplier: 1, mediumGemWeightBonus: 0, bigGemWeightBonus: 0, shardWeightBonus: 0, bonusKeyWeightBonus: 0, reviveTokenWeightBonus: 0, jackpotWeightBonus: 0, trapWeightReduction: 0, reviveTokenBonus: 0 },
+  "banner-heart": { gemMultiplier: 1, shardMultiplier: 1, xpMultiplier: 1, jackpotRewardMultiplier: 1, mediumGemWeightBonus: 0, bigGemWeightBonus: 0, shardWeightBonus: 0, bonusKeyWeightBonus: 0, reviveTokenWeightBonus: 0, jackpotWeightBonus: 0, trapWeightReduction: 0, reviveTokenBonus: 1 },
+  "banner-ice": { gemMultiplier: 1, shardMultiplier: 1, xpMultiplier: 1, jackpotRewardMultiplier: 1, mediumGemWeightBonus: 0, bigGemWeightBonus: 0, shardWeightBonus: 0, bonusKeyWeightBonus: 0, reviveTokenWeightBonus: 0, jackpotWeightBonus: 0, trapWeightReduction: 3, reviveTokenBonus: 0 },
+  "banner-emerald": { gemMultiplier: 1.1, shardMultiplier: 1, xpMultiplier: 1, jackpotRewardMultiplier: 1.1, mediumGemWeightBonus: 3, bigGemWeightBonus: 0, shardWeightBonus: 0, bonusKeyWeightBonus: 0, reviveTokenWeightBonus: 0, jackpotWeightBonus: 0, trapWeightReduction: 0, reviveTokenBonus: 0 },
+  "banner-ruby": { gemMultiplier: 1.2, shardMultiplier: 1, xpMultiplier: 1, jackpotRewardMultiplier: 1.2, mediumGemWeightBonus: 0, bigGemWeightBonus: 0, shardWeightBonus: 0, bonusKeyWeightBonus: 0, reviveTokenWeightBonus: 0, jackpotWeightBonus: 2, trapWeightReduction: 0, reviveTokenBonus: 0 },
+  "banner-diamond": { gemMultiplier: 1, shardMultiplier: 1, xpMultiplier: 1, jackpotRewardMultiplier: 1, mediumGemWeightBonus: 5, bigGemWeightBonus: 0, shardWeightBonus: 0, bonusKeyWeightBonus: 0, reviveTokenWeightBonus: 0, jackpotWeightBonus: 5, trapWeightReduction: 0, reviveTokenBonus: 0 },
+  "banner-galaxy": { gemMultiplier: 1, shardMultiplier: 1.3, xpMultiplier: 1.08, jackpotRewardMultiplier: 1, mediumGemWeightBonus: 0, bigGemWeightBonus: 0, shardWeightBonus: 0, bonusKeyWeightBonus: 0, reviveTokenWeightBonus: 0, jackpotWeightBonus: 0, trapWeightReduction: 0, reviveTokenBonus: 0 },
+  "banner-golden-bird": { gemMultiplier: 1, shardMultiplier: 1, xpMultiplier: 1.12, jackpotRewardMultiplier: 1, mediumGemWeightBonus: 0, bigGemWeightBonus: 0, shardWeightBonus: 0, bonusKeyWeightBonus: 0, reviveTokenWeightBonus: 0, jackpotWeightBonus: 0, trapWeightReduction: 0, reviveTokenBonus: 0 },
+  "banner-champion": { gemMultiplier: 1.15, shardMultiplier: 1.2, xpMultiplier: 1.1, jackpotRewardMultiplier: 1.15, mediumGemWeightBonus: 3, bigGemWeightBonus: 0, shardWeightBonus: 0, bonusKeyWeightBonus: 0, reviveTokenWeightBonus: 0, jackpotWeightBonus: 4, trapWeightReduction: 2, reviveTokenBonus: 0 },
 
   // Avatars — strongest bonuses, most expensive
-  "avatar-basic": { gemMultiplier: 1, jackpotChanceBonus: 0, mediumGemChanceBonus: 0, trapReduction: 0, shardMultiplier: 1, xpMultiplier: 1, reviveTokenBonus: 0 },
-  "avatar-champion": { gemMultiplier: 1.2, jackpotChanceBonus: 3, mediumGemChanceBonus: 5, trapReduction: 0, shardMultiplier: 1, xpMultiplier: 1, reviveTokenBonus: 0 },
-  "avatar-galaxy": { gemMultiplier: 1, jackpotChanceBonus: 8, mediumGemChanceBonus: 0, trapReduction: 0, shardMultiplier: 1.25, xpMultiplier: 1, reviveTokenBonus: 0 },
-  "avatar-pirate": { gemMultiplier: 1.3, jackpotChanceBonus: 0, mediumGemChanceBonus: 0, trapReduction: 4, shardMultiplier: 1, xpMultiplier: 1, reviveTokenBonus: 0 },
-  "avatar-joker": { gemMultiplier: 1, jackpotChanceBonus: 12, mediumGemChanceBonus: 0, trapReduction: -2, shardMultiplier: 1, xpMultiplier: 1, reviveTokenBonus: 0 },
-  "avatar-shadow": { gemMultiplier: 1, jackpotChanceBonus: 0, mediumGemChanceBonus: 8, trapReduction: 6, shardMultiplier: 1, xpMultiplier: 1.05, reviveTokenBonus: 0 },
-  "avatar-dragon": { gemMultiplier: 1.4, jackpotChanceBonus: 6, mediumGemChanceBonus: 5, trapReduction: 3, shardMultiplier: 1.3, xpMultiplier: 1.1, reviveTokenBonus: 0 },
+  "avatar-basic": { gemMultiplier: 1, shardMultiplier: 1, xpMultiplier: 1, jackpotRewardMultiplier: 1, mediumGemWeightBonus: 0, bigGemWeightBonus: 0, shardWeightBonus: 0, bonusKeyWeightBonus: 0, reviveTokenWeightBonus: 0, jackpotWeightBonus: 0, trapWeightReduction: 0, reviveTokenBonus: 0 },
+  "avatar-champion": { gemMultiplier: 1.2, shardMultiplier: 1, xpMultiplier: 1, jackpotRewardMultiplier: 1.2, mediumGemWeightBonus: 5, bigGemWeightBonus: 0, shardWeightBonus: 0, bonusKeyWeightBonus: 0, reviveTokenWeightBonus: 0, jackpotWeightBonus: 3, trapWeightReduction: 0, reviveTokenBonus: 0 },
+  "avatar-galaxy": { gemMultiplier: 1, shardMultiplier: 1.25, xpMultiplier: 1, jackpotRewardMultiplier: 1, mediumGemWeightBonus: 0, bigGemWeightBonus: 0, shardWeightBonus: 0, bonusKeyWeightBonus: 0, reviveTokenWeightBonus: 0, jackpotWeightBonus: 8, trapWeightReduction: 0, reviveTokenBonus: 0 },
+  "avatar-pirate": { gemMultiplier: 1.3, shardMultiplier: 1, xpMultiplier: 1, jackpotRewardMultiplier: 1.3, mediumGemWeightBonus: 0, bigGemWeightBonus: 0, shardWeightBonus: 0, bonusKeyWeightBonus: 0, reviveTokenWeightBonus: 0, jackpotWeightBonus: 0, trapWeightReduction: 4, reviveTokenBonus: 0 },
+  "avatar-joker": { gemMultiplier: 1, shardMultiplier: 1, xpMultiplier: 1, jackpotRewardMultiplier: 1, mediumGemWeightBonus: 0, bigGemWeightBonus: 0, shardWeightBonus: 0, bonusKeyWeightBonus: 0, reviveTokenWeightBonus: 0, jackpotWeightBonus: 12, trapWeightReduction: -2, reviveTokenBonus: 0 },
+  "avatar-shadow": { gemMultiplier: 1, shardMultiplier: 1, xpMultiplier: 1.05, jackpotRewardMultiplier: 1, mediumGemWeightBonus: 8, bigGemWeightBonus: 0, shardWeightBonus: 0, bonusKeyWeightBonus: 0, reviveTokenWeightBonus: 0, jackpotWeightBonus: 0, trapWeightReduction: 6, reviveTokenBonus: 0 },
+  "avatar-dragon": { gemMultiplier: 1.4, shardMultiplier: 1.3, xpMultiplier: 1.1, jackpotRewardMultiplier: 1.4, mediumGemWeightBonus: 5, bigGemWeightBonus: 0, shardWeightBonus: 0, bonusKeyWeightBonus: 0, reviveTokenWeightBonus: 0, jackpotWeightBonus: 6, trapWeightReduction: 3, reviveTokenBonus: 0 },
 };
 
 export function getActiveCosmeticBonuses(player: Player): CosmeticBonuses {
@@ -34,177 +51,226 @@ export function getActiveCosmeticBonuses(player: Player): CosmeticBonuses {
   const avatar = COSMETIC_BONUSES[player.activeAvatar] ?? COSMETIC_BONUSES["avatar-basic"];
   const banner = COSMETIC_BONUSES[player.activeBadgeFrame] ?? COSMETIC_BONUSES["banner-default"];
 
-  return {
+  const raw: CosmeticBonuses = {
     gemMultiplier: skin.gemMultiplier * avatar.gemMultiplier * banner.gemMultiplier,
-    jackpotChanceBonus: skin.jackpotChanceBonus + avatar.jackpotChanceBonus + banner.jackpotChanceBonus,
-    mediumGemChanceBonus: skin.mediumGemChanceBonus + avatar.mediumGemChanceBonus + banner.mediumGemChanceBonus,
-    trapReduction: skin.trapReduction + avatar.trapReduction + banner.trapReduction,
     shardMultiplier: skin.shardMultiplier * avatar.shardMultiplier * banner.shardMultiplier,
     xpMultiplier: skin.xpMultiplier * avatar.xpMultiplier * banner.xpMultiplier,
+    jackpotRewardMultiplier: skin.jackpotRewardMultiplier * avatar.jackpotRewardMultiplier * banner.jackpotRewardMultiplier,
+
+    mediumGemWeightBonus: skin.mediumGemWeightBonus + avatar.mediumGemWeightBonus + banner.mediumGemWeightBonus,
+    bigGemWeightBonus: skin.bigGemWeightBonus + avatar.bigGemWeightBonus + banner.bigGemWeightBonus,
+    shardWeightBonus: skin.shardWeightBonus + avatar.shardWeightBonus + banner.shardWeightBonus,
+    bonusKeyWeightBonus: skin.bonusKeyWeightBonus + avatar.bonusKeyWeightBonus + banner.bonusKeyWeightBonus,
+    reviveTokenWeightBonus: skin.reviveTokenWeightBonus + avatar.reviveTokenWeightBonus + banner.reviveTokenWeightBonus,
+    jackpotWeightBonus: skin.jackpotWeightBonus + avatar.jackpotWeightBonus + banner.jackpotWeightBonus,
+    trapWeightReduction: skin.trapWeightReduction + avatar.trapWeightReduction + banner.trapWeightReduction,
+
     reviveTokenBonus: skin.reviveTokenBonus + avatar.reviveTokenBonus + banner.reviveTokenBonus,
+  };
+
+  return {
+    gemMultiplier: Math.min(raw.gemMultiplier, COSMETIC_BONUS_CAPS.maxGemMultiplier),
+    shardMultiplier: Math.min(raw.shardMultiplier, COSMETIC_BONUS_CAPS.maxShardMultiplier),
+    xpMultiplier: Math.min(raw.xpMultiplier, COSMETIC_BONUS_CAPS.maxXpMultiplier),
+    jackpotRewardMultiplier: Math.min(raw.jackpotRewardMultiplier, COSMETIC_BONUS_CAPS.maxJackpotRewardMultiplier),
+
+    mediumGemWeightBonus: Math.min(raw.mediumGemWeightBonus, COSMETIC_BONUS_CAPS.maxMediumGemWeightBonus),
+    bigGemWeightBonus: Math.min(raw.bigGemWeightBonus, COSMETIC_BONUS_CAPS.maxBigGemWeightBonus),
+    shardWeightBonus: Math.min(raw.shardWeightBonus, COSMETIC_BONUS_CAPS.maxShardWeightBonus),
+    bonusKeyWeightBonus: Math.min(raw.bonusKeyWeightBonus, COSMETIC_BONUS_CAPS.maxBonusKeyWeightBonus),
+    reviveTokenWeightBonus: Math.min(raw.reviveTokenWeightBonus, COSMETIC_BONUS_CAPS.maxReviveTokenWeightBonus),
+    jackpotWeightBonus: Math.min(raw.jackpotWeightBonus, COSMETIC_BONUS_CAPS.maxJackpotWeightBonus),
+    trapWeightReduction: Math.min(raw.trapWeightReduction, COSMETIC_BONUS_CAPS.maxTrapWeightReduction),
+
+    reviveTokenBonus: raw.reviveTokenBonus,
   };
 }
 
-export const VAULT_ODDS: Record<number, VaultOdds[]> = {
-  1: [
-    { type: "smallGems", chance: 55 },
-    { type: "mediumGems", chance: 20 },
-    { type: "multiplier", chance: 20 },
-    { type: "bonusKey", chance: 3 },
-    { type: "trap", chance: 2 },
-  ],
-  2: [
-    { type: "smallGems", chance: 34 },
-    { type: "mediumGems", chance: 23 },
-    { type: "multiplier", chance: 20 },
-    { type: "bonusKey", chance: 4 },
-    { type: "cosmeticShard", chance: 5 },
-    { type: "bonusLife", chance: 5 },
-    { type: "trap", chance: 9 },
-  ],
-  3: [
-    { type: "smallGems", chance: 20 },
-    { type: "mediumGems", chance: 27 },
-    { type: "bigGems", chance: 10 },
-    { type: "multiplier", chance: 18 },
-    { type: "bonusKey", chance: 3 },
-    { type: "cosmeticShard", chance: 6 },
-    { type: "bonusLife", chance: 6 },
-    { type: "trap", chance: 10 },
-  ],
-  4: [
-    { type: "mediumGems", chance: 15 },
-    { type: "bigGems", chance: 12 },
-    { type: "smallGems", chance: 5 },
-    { type: "multiplier", chance: 15 },
-    { type: "bonusKey", chance: 3 },
-    { type: "cosmeticShard", chance: 12 },
-    { type: "bonusLife", chance: 12 },
-    { type: "jackpot", chance: 9 },
-    { type: "shardJackpot", chance: 5 },
-    { type: "trap", chance: 12 },
-  ],
-  5: [
-    { type: "smallGems", chance: 3 },
-    { type: "bigGems", chance: 20 },
-    { type: "cosmeticShard", chance: 12 },
-    { type: "bonusLife", chance: 12 },
-    { type: "jackpot", chance: 13 },
-    { type: "multiplier", chance: 17 },
-    { type: "shardJackpot", chance: 8 },
-    { type: "trap", chance: 15 },
-  ],
-  6: [
-    { type: "mediumGems", chance: 8 },
-    { type: "bigGems", chance: 22 },
-    { type: "cosmeticShard", chance: 12 },
-    { type: "bonusLife", chance: 12 },
-    { type: "jackpot", chance: 11 },
-    { type: "multiplier", chance: 11 },
-    { type: "shardJackpot", chance: 5 },
-    { type: "trap", chance: 19 },
-  ],
-  7: [
-    { type: "mediumGems", chance: 6 },
-    { type: "bigGems", chance: 26 },
-    { type: "cosmeticShard", chance: 10 },
-    { type: "bonusLife", chance: 10 },
-    { type: "jackpot", chance: 13 },
-    { type: "multiplier", chance: 10 },
-    { type: "shardJackpot", chance: 5 },
-    { type: "trap", chance: 20 },
-  ],
-  8: [
-    { type: "bigGems", chance: 26 },
-    { type: "cosmeticShard", chance: 10 },
-    { type: "bonusLife", chance: 10 },
-    { type: "jackpot", chance: 14 },
-    { type: "multiplier", chance: 14 },
-    { type: "shardJackpot", chance: 4 },
-    { type: "trap", chance: 22 },
-  ],
-  9: [
-    { type: "bigGems", chance: 22 },
-    { type: "cosmeticShard", chance: 12 },
-    { type: "bonusLife", chance: 10 },
-    { type: "jackpot", chance: 14 },
-    { type: "multiplier", chance: 13 },
-    { type: "shardJackpot", chance: 5 },
-    { type: "trap", chance: 24 },
-  ],
-  10: [
-    { type: "bigGems", chance: 18 },
-    { type: "cosmeticShard", chance: 12 },
-    { type: "bonusLife", chance: 8 },
-    { type: "jackpot", chance: 14 },
-    { type: "multiplier", chance: 15 },
-    { type: "shardJackpot", chance: 5 },
-    { type: "trap", chance: 28 },
-  ],
+export const VAULT_WEIGHTS: Record<number, RewardWeights> = {
+  1: {
+    smallGems: 55,
+    mediumGems: 20,
+    bigGems: 0,
+    multiplier: 20,
+    bonusKey: 3,
+    cosmeticShard: 0,
+    bonusLife: 0,
+    jackpot: 0,
+    shardJackpot: 0,
+    trap: 2,
+  },
+  2: {
+    smallGems: 34,
+    mediumGems: 23,
+    bigGems: 0,
+    multiplier: 20,
+    bonusKey: 4,
+    cosmeticShard: 5,
+    bonusLife: 5,
+    jackpot: 0,
+    shardJackpot: 0,
+    trap: 9,
+  },
+  3: {
+    smallGems: 20,
+    mediumGems: 27,
+    bigGems: 10,
+    multiplier: 18,
+    bonusKey: 3,
+    cosmeticShard: 6,
+    bonusLife: 6,
+    jackpot: 0,
+    shardJackpot: 0,
+    trap: 10,
+  },
+  4: {
+    smallGems: 5,
+    mediumGems: 15,
+    bigGems: 12,
+    multiplier: 15,
+    bonusKey: 3,
+    cosmeticShard: 12,
+    bonusLife: 12,
+    jackpot: 9,
+    shardJackpot: 5,
+    trap: 12,
+  },
+  5: {
+    smallGems: 3,
+    mediumGems: 0,
+    bigGems: 20,
+    multiplier: 17,
+    bonusKey: 0,
+    cosmeticShard: 12,
+    bonusLife: 12,
+    jackpot: 13,
+    shardJackpot: 8,
+    trap: 15,
+  },
+  6: {
+    smallGems: 0,
+    mediumGems: 8,
+    bigGems: 22,
+    multiplier: 11,
+    bonusKey: 0,
+    cosmeticShard: 12,
+    bonusLife: 12,
+    jackpot: 11,
+    shardJackpot: 5,
+    trap: 19,
+  },
+  7: {
+    smallGems: 0,
+    mediumGems: 6,
+    bigGems: 26,
+    multiplier: 10,
+    bonusKey: 0,
+    cosmeticShard: 10,
+    bonusLife: 10,
+    jackpot: 13,
+    shardJackpot: 5,
+    trap: 20,
+  },
+  8: {
+    smallGems: 0,
+    mediumGems: 0,
+    bigGems: 26,
+    multiplier: 14,
+    bonusKey: 0,
+    cosmeticShard: 10,
+    bonusLife: 10,
+    jackpot: 14,
+    shardJackpot: 4,
+    trap: 22,
+  },
+  9: {
+    smallGems: 0,
+    mediumGems: 0,
+    bigGems: 22,
+    multiplier: 13,
+    bonusKey: 0,
+    cosmeticShard: 12,
+    bonusLife: 10,
+    jackpot: 14,
+    shardJackpot: 5,
+    trap: 24,
+  },
+  10: {
+    smallGems: 0,
+    mediumGems: 0,
+    bigGems: 18,
+    multiplier: 15,
+    bonusKey: 0,
+    cosmeticShard: 12,
+    bonusLife: 8,
+    jackpot: 14,
+    shardJackpot: 5,
+    trap: 28,
+  },
 };
 
-function weightedRandom(odds: VaultOdds[]): OutcomeType {
-  const total = odds.reduce((sum, o) => sum + o.chance, 0);
-  let rand = Math.random() * total;
-  for (const o of odds) {
-    rand -= o.chance;
-    if (rand <= 0) return o.type;
+export function rollWeightedOutcome(weights: RewardWeights): OutcomeType {
+  const entries = Object.entries(weights).filter(([, w]) => w > 0) as [OutcomeType, number][];
+  const total = entries.reduce((sum, [, w]) => sum + w, 0);
+  if (total <= 0) return "smallGems";
+
+  let roll = Math.random() * total;
+  for (const [type, w] of entries) {
+    roll -= w;
+    if (roll <= 0) return type;
   }
-  return odds[odds.length - 1].type;
+  return entries[entries.length - 1][0];
 }
 
-export function applyOddsBonuses(odds: VaultOdds[], bonuses: CosmeticBonuses): VaultOdds[] {
-  const adjusted = odds.map((o) => ({ ...o }));
-
-  // Boost jackpot chance
-  if (bonuses.jackpotChanceBonus > 0) {
-    const trapIdx = adjusted.findIndex((o) => o.type === "trap");
-    if (trapIdx !== -1) {
-      adjusted[trapIdx].chance = Math.max(1, adjusted[trapIdx].chance - bonuses.jackpotChanceBonus);
-    }
-    const jackpotIdx = adjusted.findIndex((o) => o.type === "jackpot");
-    if (jackpotIdx !== -1) {
-      adjusted[jackpotIdx].chance += bonuses.jackpotChanceBonus;
-    } else {
-      // If no jackpot in this vault, convert a small portion of trap to jackpot
-      const trap = adjusted.find((o) => o.type === "trap");
-      if (trap) {
-        trap.chance = Math.max(1, trap.chance - bonuses.jackpotChanceBonus);
-        adjusted.push({ type: "jackpot", chance: bonuses.jackpotChanceBonus });
-      }
-    }
+export function normalizeWeightsToPercentages(weights: RewardWeights): Record<string, number> {
+  const entries = Object.entries(weights) as [OutcomeType, number][];
+  const total = entries.reduce((sum, [, w]) => sum + Math.max(0, w), 0);
+  if (total <= 0) {
+    return Object.fromEntries(entries.map(([k]) => [k, 0])) as Record<string, number>;
   }
+  return Object.fromEntries(
+    entries.map(([k, w]) => [k, (Math.max(0, w) / total) * 100])
+  ) as Record<string, number>;
+}
 
-  // Boost medium gem chance
-  if (bonuses.mediumGemChanceBonus > 0) {
-    const trapIdx = adjusted.findIndex((o) => o.type === "trap");
-    if (trapIdx !== -1) {
-      adjusted[trapIdx].chance = Math.max(1, adjusted[trapIdx].chance - bonuses.mediumGemChanceBonus);
-    }
-    const medIdx = adjusted.findIndex((o) => o.type === "mediumGems");
-    if (medIdx !== -1) {
-      adjusted[medIdx].chance += bonuses.mediumGemChanceBonus;
-    }
+export function applyCosmeticBonusesToWeights(baseWeights: RewardWeights, bonuses: CosmeticBonuses): RewardWeights {
+  return {
+    ...baseWeights,
+    mediumGems: Math.max(0, baseWeights.mediumGems + bonuses.mediumGemWeightBonus),
+    bigGems: Math.max(0, baseWeights.bigGems + bonuses.bigGemWeightBonus),
+    cosmeticShard: Math.max(0, baseWeights.cosmeticShard + bonuses.shardWeightBonus),
+    shardJackpot: Math.max(0, baseWeights.shardJackpot + bonuses.shardWeightBonus),
+    bonusKey: Math.max(0, baseWeights.bonusKey + bonuses.bonusKeyWeightBonus),
+    bonusLife: Math.max(0, baseWeights.bonusLife + bonuses.reviveTokenWeightBonus),
+    jackpot: Math.max(0, baseWeights.jackpot + bonuses.jackpotWeightBonus),
+    trap: Math.max(COSMETIC_BONUS_CAPS.minTrapWeight, baseWeights.trap - bonuses.trapWeightReduction),
+  };
+}
+
+export function getDebugWeightInfo(vaultNumber: number, player: Player) {
+  const bonuses = getActiveCosmeticBonuses(player);
+  const baseWeights = VAULT_WEIGHTS[vaultNumber] ?? VAULT_WEIGHTS[MAX_DEFINED_VAULT];
+  const finalWeights = applyCosmeticBonusesToWeights(baseWeights, bonuses);
+  return {
+    baseWeights,
+    cosmeticBonuses: bonuses,
+    finalWeights,
+    displayPercentages: normalizeWeightsToPercentages(finalWeights),
+  };
+}
+
+export function simulateRewardRolls(weights: RewardWeights, runs = 10000) {
+  const counts: Record<string, number> = {};
+  for (let i = 0; i < runs; i++) {
+    const outcome = rollWeightedOutcome(weights);
+    counts[outcome] = (counts[outcome] ?? 0) + 1;
   }
-
-  // Reduce trap chance
-  if (bonuses.trapReduction !== 0) {
-    const trapIdx = adjusted.findIndex((o) => o.type === "trap");
-    if (trapIdx !== -1) {
-      const removed = Math.min(adjusted[trapIdx].chance - 1, bonuses.trapReduction);
-      adjusted[trapIdx].chance -= removed;
-      // Distribute removed to smallGems or mediumGems
-      const smIdx = adjusted.findIndex((o) => o.type === "smallGems");
-      if (smIdx !== -1) {
-        adjusted[smIdx].chance += removed;
-      } else {
-        const medIdx = adjusted.findIndex((o) => o.type === "mediumGems");
-        if (medIdx !== -1) adjusted[medIdx].chance += removed;
-      }
-    }
-  }
-
-  return adjusted;
+  return Object.fromEntries(
+    Object.entries(counts).map(([key, count]) => [
+      key,
+      `${((count / runs) * 100).toFixed(2)}%`,
+    ])
+  );
 }
 
 export const OUTCOME_BASE_LABELS: Record<OutcomeType, string> = {
@@ -220,7 +286,7 @@ export const OUTCOME_BASE_LABELS: Record<OutcomeType, string> = {
   shardJackpot: "20-40 shards",
 };
 
-const MAX_DEFINED_VAULT = Math.max(...Object.keys(VAULT_ODDS).map(Number));
+const MAX_DEFINED_VAULT = Math.max(...Object.keys(VAULT_WEIGHTS).map(Number));
 
 function randInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -232,10 +298,14 @@ function vaultDepthMultiplier(vaultNum: number): number {
 
 export function resolveVault(vaultNumber: number, multiplier: number, player: Player): VaultOutcome {
   const bonuses = getActiveCosmeticBonuses(player);
-  const baseOdds = VAULT_ODDS[vaultNumber] ?? VAULT_ODDS[MAX_DEFINED_VAULT];
-  const odds = applyOddsBonuses(baseOdds, bonuses);
-  const type = weightedRandom(odds);
+  const baseWeights = VAULT_WEIGHTS[vaultNumber] ?? VAULT_WEIGHTS[MAX_DEFINED_VAULT];
+  const weights = applyCosmeticBonusesToWeights(baseWeights, bonuses);
+  const type = rollWeightedOutcome(weights);
   const depth = vaultDepthMultiplier(vaultNumber);
+
+  if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
+    console.log('[resolveVault] vault:', vaultNumber, 'rolled:', type, getDebugWeightInfo(vaultNumber, player));
+  }
 
   switch (type) {
     case "smallGems":
@@ -253,7 +323,7 @@ export function resolveVault(vaultNumber: number, multiplier: number, player: Pl
     case "trap":
       return { type, label: "TRAP!", gems: 0 };
     case "jackpot":
-      return { type, label: "JACKPOT!", gems: Math.round(randInt(200, 400) * multiplier * bonuses.gemMultiplier * depth) };
+      return { type, label: "JACKPOT!", gems: Math.round(randInt(200, 400) * multiplier * bonuses.jackpotRewardMultiplier * depth) };
     case "bonusLife":
       return { type, label: "Bonus Life!", gems: Math.round(randInt(15, 25) * multiplier * bonuses.gemMultiplier * depth) };
     case "shardJackpot":
@@ -264,13 +334,11 @@ export function resolveVault(vaultNumber: number, multiplier: number, player: Pl
 }
 
 export function getRiskPercent(vaultNumber: number, player?: Player): number {
-  const maxVault = Math.max(...Object.keys(VAULT_ODDS).map(Number));
-  const odds = VAULT_ODDS[vaultNumber] ?? VAULT_ODDS[maxVault];
-  const adjusted = player ? applyOddsBonuses(odds, getActiveCosmeticBonuses(player)) : odds;
-  const trap = adjusted.find((o) => o.type === "trap");
-  if (!trap) return 30;
-  const total = adjusted.reduce((s, o) => s + o.chance, 0);
-  return total > 0 ? Math.round((trap.chance / total) * 100) : 30;
+  const maxVault = Math.max(...Object.keys(VAULT_WEIGHTS).map(Number));
+  const baseWeights = VAULT_WEIGHTS[vaultNumber] ?? VAULT_WEIGHTS[maxVault];
+  const weights = player ? applyCosmeticBonusesToWeights(baseWeights, getActiveCosmeticBonuses(player)) : baseWeights;
+  const normalized = normalizeWeightsToPercentages(weights);
+  return Math.round(normalized.trap ?? 30);
 }
 
 export function xpForLevel(level: number): number {

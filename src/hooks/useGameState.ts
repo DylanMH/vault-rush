@@ -317,6 +317,7 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
 
     if (auth.isAuthenticated && auth.userId) {
       // Server-side validation via RPC
+      const bonuses = getActiveCosmeticBonuses(player);
       try {
         const { data, error } = await supabase.rpc('bank_run_rewards', {
           p_vaults_opened: vaultCount,
@@ -325,6 +326,7 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
           p_hit_trap: everHitTrap,
           p_hit_jackpot: hitJackpot,
           p_outcomes: run.history,
+          p_xp_multiplier: bonuses.xpMultiplier,
         });
 
         if (error) throw error;
@@ -456,7 +458,7 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
     setShowOutcome(false);
   }, [run.isTrapTriggered, run.reviveUsed, player.reviveTokens, auth.isAuthenticated, auth.userId]);
 
-  const abandonRun = useCallback(() => {
+  const abandonRun = useCallback(async () => {
     const vaultCount = run.currentVault - 1;
     if (vaultCount > 0) {
       setPlayer((prev) => ({
@@ -464,24 +466,30 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
         longestRun: Math.max(prev.longestRun, vaultCount),
       }));
     }
+    if (auth.isAuthenticated && auth.userId) {
+      try { await supabase.rpc('clear_active_run'); } catch {}
+    }
     clearCurrentRun();
     setRun(getDefaultRunState());
     setLastOutcome(null);
     setShowOutcome(false);
     setScreen("home");
-  }, [clearCurrentRun, run.currentVault]);
+  }, [clearCurrentRun, run.currentVault, auth.isAuthenticated, auth.userId]);
 
-  const cancelRun = useCallback(() => {
+  const cancelRun = useCallback(async () => {
     setPlayer((prev) => {
       const next = { ...prev, keys: prev.keys + 1 };
       return next;
     });
+    if (auth.isAuthenticated && auth.userId) {
+      try { await supabase.rpc('clear_active_run'); } catch {}
+    }
     clearCurrentRun();
     setRun(getDefaultRunState());
     setLastOutcome(null);
     setShowOutcome(false);
     setScreen("home");
-  }, [clearCurrentRun]);
+  }, [clearCurrentRun, auth.isAuthenticated, auth.userId]);
 
   const getIsoDate = (d: Date) => d.toISOString().split('T')[0];
 

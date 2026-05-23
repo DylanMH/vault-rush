@@ -19,11 +19,6 @@ export interface VaultOutcome {
   shards?: number;
 }
 
-export interface VaultOdds {
-  type: OutcomeType;
-  chance: number;
-}
-
 export interface Player {
   gems: number;
   keys: number;
@@ -64,14 +59,26 @@ export interface RunState {
 }
 
 export interface CosmeticBonuses {
+  // Payout multipliers (do NOT affect odds)
   gemMultiplier: number;
-  jackpotChanceBonus: number;
-  mediumGemChanceBonus: number;
-  trapReduction: number;
   shardMultiplier: number;
   xpMultiplier: number;
+  jackpotRewardMultiplier: number;
+
+  // Weight bonuses (DO affect odds)
+  mediumGemWeightBonus: number;
+  bigGemWeightBonus: number;
+  shardWeightBonus: number;
+  bonusKeyWeightBonus: number;
+  reviveTokenWeightBonus: number;
+  jackpotWeightBonus: number;
+  trapWeightReduction: number;
+
+  // Flat bonuses (not odds-related)
   reviveTokenBonus: number;
 }
+
+export type RewardWeights = Record<OutcomeType, number>;
 
 export interface CosmeticItem {
   id: string;
