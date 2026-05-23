@@ -58,6 +58,7 @@ export interface SupabaseRun {
 }
 
 export interface LeaderboardEntry {
+  user_id?: string;
   username?: string;
   display_name?: string;
   score: number;

@@ -19,6 +19,7 @@
 .DS_Store
 *.pem
 todo.md
+weight-based.md
 
 # debug
 npm-debug.log*

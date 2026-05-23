@@ -86,12 +86,12 @@ export const VAULT_ODDS: Record<number, VaultOdds[]> = {
   ],
   5: [
     { type: "smallGems", chance: 3 },
-    { type: "bigGems", chance: 18 },
+    { type: "bigGems", chance: 20 },
     { type: "cosmeticShard", chance: 12 },
     { type: "bonusLife", chance: 12 },
-    { type: "jackpot", chance: 11 },
-    { type: "multiplier", chance: 14 },
-    { type: "shardJackpot", chance: 5 },
+    { type: "jackpot", chance: 13 },
+    { type: "multiplier", chance: 17 },
+    { type: "shardJackpot", chance: 8 },
     { type: "trap", chance: 15 },
   ],
   6: [
@@ -106,7 +106,7 @@ export const VAULT_ODDS: Record<number, VaultOdds[]> = {
   ],
   7: [
     { type: "mediumGems", chance: 6 },
-    { type: "bigGems", chance: 23 },
+    { type: "bigGems", chance: 26 },
     { type: "cosmeticShard", chance: 10 },
     { type: "bonusLife", chance: 10 },
     { type: "jackpot", chance: 13 },
@@ -208,49 +208,58 @@ export function applyOddsBonuses(odds: VaultOdds[], bonuses: CosmeticBonuses): V
 }
 
 export const OUTCOME_BASE_LABELS: Record<OutcomeType, string> = {
-  smallGems: "12 gems",
-  mediumGems: "30 gems",
-  bigGems: "75 gems",
+  smallGems: "10-20 gems",
+  mediumGems: "40-60 gems",
+  bigGems: "80-120 gems",
   multiplier: "+0.5x",
   bonusKey: "1 key",
-  cosmeticShard: "2 shards",
+  cosmeticShard: "2-4 shards",
   trap: "Lose all",
-  jackpot: "350 gems",
-  bonusLife: "15 gems + 1 life",
-  shardJackpot: "25 shards",
+  jackpot: "200-400 gems",
+  bonusLife: "15-25 gems + 1 life",
+  shardJackpot: "20-40 shards",
 };
 
 const MAX_DEFINED_VAULT = Math.max(...Object.keys(VAULT_ODDS).map(Number));
+
+function randInt(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function vaultDepthMultiplier(vaultNum: number): number {
+  return 1 + vaultNum * 0.05;
+}
 
 export function resolveVault(vaultNumber: number, multiplier: number, player: Player): VaultOutcome {
   const bonuses = getActiveCosmeticBonuses(player);
   const baseOdds = VAULT_ODDS[vaultNumber] ?? VAULT_ODDS[MAX_DEFINED_VAULT];
   const odds = applyOddsBonuses(baseOdds, bonuses);
   const type = weightedRandom(odds);
+  const depth = vaultDepthMultiplier(vaultNumber);
 
   switch (type) {
     case "smallGems":
-      return { type, label: "Small Gems", gems: Math.round(12 * multiplier * bonuses.gemMultiplier) };
+      return { type, label: "Small Gems", gems: Math.round(randInt(10, 20) * multiplier * bonuses.gemMultiplier * depth) };
     case "mediumGems":
-      return { type, label: "Medium Gems", gems: Math.round(30 * multiplier * bonuses.gemMultiplier) };
+      return { type, label: "Medium Gems", gems: Math.round(randInt(40, 60) * multiplier * bonuses.gemMultiplier * depth) };
     case "bigGems":
-      return { type, label: "Big Gems", gems: Math.round(75 * multiplier * bonuses.gemMultiplier) };
+      return { type, label: "Big Gems", gems: Math.round(randInt(80, 120) * multiplier * bonuses.gemMultiplier * depth) };
     case "multiplier":
       return { type, label: "Multiplier Up!", multiplierDelta: 0.5 };
     case "bonusKey":
       return { type, label: "Bonus Key!", keys: 1 };
     case "cosmeticShard":
-      return { type, label: "Cosmetic Shard!", shards: Math.round(2 * bonuses.shardMultiplier) };
+      return { type, label: "Cosmetic Shard!", shards: Math.round(randInt(2, 4) * bonuses.shardMultiplier * depth) };
     case "trap":
       return { type, label: "TRAP!", gems: 0 };
     case "jackpot":
-      return { type, label: "JACKPOT!", gems: Math.round(350 * multiplier * bonuses.gemMultiplier) };
+      return { type, label: "JACKPOT!", gems: Math.round(randInt(200, 400) * multiplier * bonuses.gemMultiplier * depth) };
     case "bonusLife":
-      return { type, label: "Bonus Life!", gems: Math.round(15 * multiplier * bonuses.gemMultiplier) };
+      return { type, label: "Bonus Life!", gems: Math.round(randInt(15, 25) * multiplier * bonuses.gemMultiplier * depth) };
     case "shardJackpot":
-      return { type, label: "SHARD JACKPOT!", shards: Math.round(25 * bonuses.shardMultiplier) };
+      return { type, label: "SHARD JACKPOT!", shards: Math.round(randInt(20, 40) * bonuses.shardMultiplier * depth) };
     default:
-      return { type: "smallGems", label: "Small Gems", gems: Math.round(3 * multiplier * bonuses.gemMultiplier) };
+      return { type: "smallGems", label: "Small Gems", gems: Math.round(randInt(5, 10) * multiplier * bonuses.gemMultiplier * depth) };
   }
 }
 

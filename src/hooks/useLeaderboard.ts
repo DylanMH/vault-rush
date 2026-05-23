@@ -29,8 +29,8 @@ export function useLeaderboard(category: LeaderboardCategory) {
     try {
       const scoreColumn = categoryColumnMap[category];
       const { data, error: fetchError } = await supabase
-        .from('leaderboard')
-        .select('username, display_name, level, active_vault_skin, active_avatar, active_badge_frame, ' + scoreColumn)
+        .from('players')
+        .select('user_id, username, display_name, level, active_vault_skin, active_avatar, active_badge_frame, ' + scoreColumn)
         .gt(scoreColumn, 0)
         .order(scoreColumn, { ascending: false })
         .limit(50);
@@ -38,6 +38,7 @@ export function useLeaderboard(category: LeaderboardCategory) {
       if (fetchError) throw fetchError;
 
       const mapped: LeaderboardEntry[] = (data || []).map((row: any, index: number) => ({
+        user_id: row.user_id,
         username: row.username,
         display_name: row.display_name,
         score: row[scoreColumn] as number,

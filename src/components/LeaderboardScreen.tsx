@@ -76,7 +76,7 @@ export default function LeaderboardScreen({ player, userId, onBack }: Leaderboar
     rank: e.rank,
     name: getDisplayName(e),
     score: e.score,
-    isPlayer: false,
+    isPlayer: e.user_id === userId,
   }));
 
   return (
@@ -124,6 +124,29 @@ export default function LeaderboardScreen({ player, userId, onBack }: Leaderboar
             {topEntries.map((entry) => (
               <EntryRow key={entry.rank + entry.name} entry={entry} />
             ))}
+
+            {/* Show player rank if not in top 10 */}
+            {(() => {
+              const playerEntry = entries.find((e) => e.user_id === userId);
+              if (!userId || playerScore <= 0 || topEntries.some((e) => e.isPlayer) || !playerEntry) return null;
+              return (
+                <>
+                  <div className="flex items-center gap-2 py-2">
+                    <div className="flex-1 h-px bg-vault-700" />
+                    <span className="text-[10px] text-vault-400 font-bold uppercase">Your Rank</span>
+                    <div className="flex-1 h-px bg-vault-700" />
+                  </div>
+                  <EntryRow
+                    entry={{
+                      rank: playerEntry.rank,
+                      name: getDisplayName(playerEntry),
+                      score: playerScore,
+                      isPlayer: true,
+                    }}
+                  />
+                </>
+              );
+            })()}
           </>
         )}
       </div>

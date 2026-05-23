@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase, SupabasePlayer } from '@/lib/supabase';
 import { Player } from '@/types/game';
 import { getDefaultPlayer } from '@/lib/gameLogic';
@@ -80,6 +80,11 @@ export function useSupabasePlayer() {
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const authStateRef = useRef<AuthState>('loading');
+
+  useEffect(() => {
+    authStateRef.current = authState;
+  }, [authState]);
 
   // Check for existing session on mount
   useEffect(() => {
@@ -89,19 +94,30 @@ export function useSupabasePlayer() {
   const checkSession = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (session?.user) {
         setUserId(session.user.id);
         setUserDisplayName(session.user.user_metadata?.display_name || session.user.user_metadata?.username || null);
         setUserEmail(session.user.email || null);
         setAuthState('authenticated');
       } else {
-        // Check if user was previously a guest
-        const savedState = localStorage.getItem(AUTH_STATE_KEY);
-        if (savedState === 'guest') {
-          setAuthState('guest');
+        // getSession can return stale null while onAuthStateChange recovers the session.
+        // Wait briefly so the listener can fire before we commit to unauthenticated.
+        await new Promise((resolve) => setTimeout(resolve, 400));
+
+        // After the delay, check the ref to see if onAuthStateChange already updated state.
+        // If it did, authStateRef.current will be 'authenticated' and we should not override.
+        if (authStateRef.current === 'authenticated') {
+          // Session was recovered by onAuthStateChange during the delay.
+          // authState, userId, etc. are already set by the listener.
         } else {
-          setAuthState('unauthenticated');
+          // Check if user was previously a guest
+          const savedState = localStorage.getItem(AUTH_STATE_KEY);
+          if (savedState === 'guest') {
+            setAuthState('guest');
+          } else {
+            setAuthState('unauthenticated');
+          }
         }
       }
     } catch (err) {

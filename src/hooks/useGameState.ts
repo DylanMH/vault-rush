@@ -62,12 +62,15 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
   useEffect(() => {
     async function loadInitialPlayer() {
       if (auth.isLoading) return;
+
       setIsPlayerLoaded(false);
       console.log('[loadInitialPlayer] loading for userId:', auth.userId);
       let loadedPlayer = await auth.loadPlayer();
 
-      // For guests (or fallback), try to restore from localStorage
-      if (!auth.isAuthenticated) {
+      // Only load from localStorage for explicit guest mode.
+      // If authState is 'unauthenticated', we might be in a brief window before
+      // onAuthStateChange fires, so we should not trust stale localStorage data.
+      if (auth.authState === 'guest') {
         try {
           const localData = localStorage.getItem("vr_player");
           if (localData) {
@@ -102,7 +105,7 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
       setIsPlayerLoaded(true);
     }
     loadInitialPlayer();
-  }, [auth.isLoading, auth.userId, auth.isAuthenticated]);
+  }, [auth.isLoading, auth.userId, auth.isAuthenticated, auth.authState]);
 
   // Note: Economy and stat updates are now server-authoritative via RPCs.
   // Client state is local-only during a run and persisted only at banking time.
@@ -310,15 +313,16 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
     const banked = run.unbankedGems;
     const vaultCount = run.currentVault - 1;
     const hitJackpot = run.history.some(h => h.type === 'jackpot');
-    
-    if (banked > 0 && auth.isAuthenticated && auth.userId) {
+    const everHitTrap = run.history.some(h => h.type === 'trap');
+
+    if (auth.isAuthenticated && auth.userId) {
       // Server-side validation via RPC
       try {
         const { data, error } = await supabase.rpc('bank_run_rewards', {
           p_vaults_opened: vaultCount,
           p_gems_banked: banked,
           p_multiplier: run.currentMultiplier,
-          p_hit_trap: run.isTrapTriggered,
+          p_hit_trap: everHitTrap,
           p_hit_jackpot: hitJackpot,
           p_outcomes: run.history,
         });
@@ -342,9 +346,10 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
             trapCount: result.trap_count,
             jackpotCount: result.jackpot_count,
             totalVaultsOpened: Number(result.total_vaults_opened),
-            longestRun: Math.max(prev.longestRun, vaultCount),
+            longestRun: result.longest_run,
+            longestStreak: result.longest_streak,
           }));
-          
+
           // Check for level up
           if (result.level > player.level) {
             const oldLevel = player.level;
@@ -354,16 +359,22 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
             const totalShards = Array.from({ length: newLevel - oldLevel }, (_, i) => Math.floor((oldLevel + i + 1) / 8)).reduce((a, b) => a + b, 0);
             setLevelUpInfo({ oldLevel, newLevel, rewards: { gems: totalGems, keys: totalKeys, shards: totalShards } });
           }
+
+          // Save run history for leaderboard/profile tracking
+          auth.saveRun(vaultCount, banked, run.currentMultiplier, everHitTrap, hitJackpot, run.history);
+        } else {
+          // Server returned empty result — fallback locally
+          console.warn('bank_run_rewards returned empty data, falling back');
+          fallbackBankRewards();
         }
       } catch (err) {
         console.error('Bank rewards RPC error:', err);
-        // Fallback to local calculation if RPC fails (e.g., function not created yet)
         fallbackBankRewards();
       }
     } else {
       fallbackBankRewards();
     }
-    
+
     clearCurrentRun();
     setRun(getDefaultRunState());
     setLastOutcome(null);
@@ -375,24 +386,32 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
     const event = getDailyEvent();
     const banked = run.unbankedGems;
     const vaultCount = run.currentVault - 1;
-    if (banked > 0) {
-      setPlayer((prev) => {
+    const hitJackpot = run.history.some(h => h.type === 'jackpot');
+    const everHitTrap = run.history.some(h => h.type === 'trap');
+
+    // Always update longestRun and save run history, even with 0 banked
+    setPlayer((prev) => {
+      const next = {
+        ...prev,
+        longestRun: Math.max(prev.longestRun, vaultCount),
+      };
+      if (banked > 0) {
         let gems = prev.gems + Math.floor(banked * event.gemMultiplier);
         if (prev.isSubscribed) gems += Math.floor(banked * 0.1);
-        const next = {
-          ...prev,
-          gems,
-          totalGemsEarned: prev.totalGemsEarned + banked,
-          bestRunGems: Math.max(prev.bestRunGems, banked),
-          weeklyScore: prev.weeklyScore + banked,
-          longestRun: Math.max(prev.longestRun, vaultCount),
-        };
-        return next;
-      });
+        next.gems = gems;
+        next.totalGemsEarned = prev.totalGemsEarned + banked;
+        next.bestRunGems = Math.max(prev.bestRunGems, banked);
+        next.weeklyScore = prev.weeklyScore + banked;
+      }
+      return next;
+    });
+
+    if (banked > 0) {
       const bonuses = getActiveCosmeticBonuses(player);
       addXp(Math.floor((vaultCount * 5 + Math.floor(banked / 5)) * event.xpMultiplier * bonuses.xpMultiplier * 0.5));
-      auth.saveRun(vaultCount, banked, run.currentMultiplier, run.isTrapTriggered, run.history.some(h => h.type === 'jackpot'), run.history);
     }
+
+    auth.saveRun(vaultCount, banked, run.currentMultiplier, everHitTrap, hitJackpot, run.history);
   }, [run, addXp, auth, player]);
 
   const useRevive = useCallback(async () => {

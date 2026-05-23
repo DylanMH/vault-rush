@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Gem, KeyRound, Heart, AlertTriangle, X, Info, Sparkles, User, Box, Hexagon, Star, Crosshair, Calendar } from "lucide-react";
+import { Gem, KeyRound, Heart, AlertTriangle, X, Info, Sparkles, User, Box, Hexagon, Star, Crosshair, Calendar, ChevronUp, ChevronDown } from "lucide-react";
 import Image from "next/image";
 import { Player, RunState, VaultOutcome } from "@/types/game";
 import { formatNumber } from "@/lib/utils";
@@ -101,6 +101,7 @@ export default function VaultRunScreen({
   const [showOdds, setShowOdds] = useState(false);
   const [justJackpot, setJustJackpot] = useState(false);
   const [justShardJackpot, setJustShardJackpot] = useState(false);
+  const [rewardsExpanded, setRewardsExpanded] = useState(false);
   const headerRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to current vault when it changes
@@ -231,102 +232,97 @@ export default function VaultRunScreen({
           );
         })()}
 
-        {/* Status + Risk */}
-        <div className="px-4 py-4 border-b border-vault-700">
-        <div className={`rounded-2xl p-4 border ${player.isSubscribed ? 'plus-glow bg-vault-800/80' : 'bg-vault-800 border-vault-700'}`}>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-vault-400 uppercase tracking-wider font-bold">
-              Rewards
-            </span>
-            <span className="text-xs text-vault-400">Vault {run.currentVault}</span>
-          </div>
-          <div className="flex items-baseline gap-2">
-            <Gem size={24} className="text-vault-gem" />
-            <span className="text-3xl font-black text-white">
-              {formatNumber(run.unbankedGems)}
-            </span>
-          </div>
-
-          {/* Run collected stats */}
-          <div className="flex items-center gap-4 mt-2">
-            <div className="flex items-center gap-1.5">
-              <Sparkles size={12} className="text-vault-accent" />
-              <span className="text-xs text-vault-accent font-bold">
-                {run.history.reduce((s, h) => s + (h.shards || 0), 0)} Shards
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <KeyRound size={12} className="text-vault-gold" />
-              <span className="text-xs text-vault-gold font-bold">
-                {run.history.reduce((s, h) => s + (h.keys || 0), 0)} Keys
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Heart size={12} className="text-red-400" />
-              <span className="text-xs text-red-400 font-bold">
-                {run.history.reduce((s, h) => s + (h.type === "bonusLife" ? 1 : 0), 0)} Lives
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 mt-2">
-            <span className="text-xs text-vault-400">Multiplier:</span>
-            <span className="text-sm font-bold text-vault-gold">
-              x{run.currentMultiplier.toFixed(1)}
-            </span>
-          </div>
-
-          {/* Equipped cosmetics row */}
-          <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-vault-700/50">
-            {/* Avatar */}
-            <div className="flex items-center gap-2">
-              <div className="relative w-8 h-8 rounded-lg overflow-hidden border border-vault-600 shrink-0">
-                <Image src={getAvatarImage(player.activeAvatar)} alt="avatar" fill className="object-cover" sizes="32px" priority />
-              </div>
-              <p className="text-[10px] text-vault-gold font-semibold leading-tight">
-                {formatCompactBonusesForId(player.activeAvatar)}
-              </p>
-            </div>
-            {/* Banner */}
-            <div className="flex items-center gap-2">
-              <div className="relative w-8 h-8 rounded-lg overflow-hidden border border-vault-600 shrink-0">
-                <Image src={getBannerImage(player.activeBadgeFrame)} alt="banner" fill className="object-cover" sizes="32px" priority />
-              </div>
-              <p className="text-[10px] text-vault-gold font-semibold leading-tight">
-                {formatCompactBonusesForId(player.activeBadgeFrame)}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Risk Meter */}
-        <div className="mt-3">
-          <div className="flex items-center justify-between text-xs mb-1.5">
-            <span className="text-vault-400">Risk Meter</span>
-            <span
-              className={`font-bold ${
-                risk > 20 ? "text-vault-danger" : "text-vault-gold"
-              }`}
-            >
-              {risk}%
-            </span>
-          </div>
-          <div className="h-3 bg-vault-800 rounded-full overflow-hidden border border-vault-700">
+        {/* Collapsible Rewards + Risk */}
+        <div className="px-4 py-2 border-b border-vault-700">
+          {!rewardsExpanded ? (
+            /* Compact bar */
             <div
-              className={`h-full rounded-full transition-all duration-500 ${
-                risk > 20
-                  ? "bg-gradient-to-r from-vault-gold to-vault-danger"
-                  : "bg-gradient-to-r from-vault-gem to-vault-gold"
+              className={`rounded-xl px-3 py-2 border flex items-center justify-between cursor-pointer active:scale-[0.99] transition ${
+                player.isSubscribed ? 'plus-glow bg-vault-800/80 border-vault-600' : 'bg-vault-800 border-vault-700'
               }`}
-              style={{ width: `${Math.min(risk * 2.5, 100)}%` }}
-            />
-          </div>
+              onClick={() => setRewardsExpanded(true)}
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-[10px] text-vault-400 font-bold uppercase">Vault {run.currentVault}</span>
+                <div className="flex items-baseline gap-1">
+                  <Gem size={14} className="text-vault-gem" />
+                  <span className="text-sm font-black text-white">{formatNumber(run.unbankedGems)}</span>
+                </div>
+                <span className="text-[10px] text-vault-gold font-bold">x{run.currentMultiplier.toFixed(1)}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={`text-xs font-bold ${risk > 20 ? "text-vault-danger" : "text-vault-gold"}`}>{risk}%</span>
+                <ChevronDown size={16} className="text-vault-400" />
+              </div>
+            </div>
+          ) : (
+            /* Expanded card */
+            <div className={`rounded-2xl p-3 border ${player.isSubscribed ? 'plus-glow bg-vault-800/80' : 'bg-vault-800 border-vault-700'}`}>
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs text-vault-400 uppercase tracking-wider font-bold">Rewards</span>
+                <button onClick={() => setRewardsExpanded(false)} className="text-vault-400 hover:text-white transition">
+                  <ChevronUp size={16} />
+                </button>
+              </div>
+              <div className="flex items-baseline gap-2">
+                <Gem size={20} className="text-vault-gem" />
+                <span className="text-2xl font-black text-white">{formatNumber(run.unbankedGems)}</span>
+              </div>
+
+              <div className="flex items-center gap-3 mt-1.5">
+                <div className="flex items-center gap-1">
+                  <Sparkles size={10} className="text-vault-accent" />
+                  <span className="text-[10px] text-vault-accent font-bold">{run.history.reduce((s, h) => s + (h.shards || 0), 0)} Shards</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <KeyRound size={10} className="text-vault-gold" />
+                  <span className="text-[10px] text-vault-gold font-bold">{run.history.reduce((s, h) => s + (h.keys || 0), 0)} Keys</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Heart size={10} className="text-red-400" />
+                  <span className="text-[10px] text-red-400 font-bold">{run.history.reduce((s, h) => s + (h.type === "bonusLife" ? 1 : 0), 0)} Lives</span>
+                </div>
+                <span className="text-[10px] text-vault-gold font-bold">x{run.currentMultiplier.toFixed(1)}</span>
+              </div>
+
+              {/* Equipped cosmetics row */}
+              <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-vault-700/50">
+                <div className="flex items-center gap-2">
+                  <div className="relative w-7 h-7 rounded-md overflow-hidden border border-vault-600 shrink-0">
+                    <Image src={getAvatarImage(player.activeAvatar)} alt="avatar" fill className="object-cover" sizes="28px" priority />
+                  </div>
+                  <p className="text-[10px] text-vault-gold font-semibold leading-tight">{formatCompactBonusesForId(player.activeAvatar)}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="relative w-7 h-7 rounded-md overflow-hidden border border-vault-600 shrink-0">
+                    <Image src={getBannerImage(player.activeBadgeFrame)} alt="banner" fill className="object-cover" sizes="28px" priority />
+                  </div>
+                  <p className="text-[10px] text-vault-gold font-semibold leading-tight">{formatCompactBonusesForId(player.activeBadgeFrame)}</p>
+                </div>
+              </div>
+
+              {/* Risk Meter */}
+              <div className="mt-2">
+                <div className="flex items-center justify-between text-[10px] mb-1">
+                  <span className="text-vault-400">Risk Meter</span>
+                  <span className={`font-bold ${risk > 20 ? "text-vault-danger" : "text-vault-gold"}`}>{risk}%</span>
+                </div>
+                <div className="h-2 bg-vault-900 rounded-full overflow-hidden border border-vault-700">
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      risk > 20 ? "bg-gradient-to-r from-vault-gold to-vault-danger" : "bg-gradient-to-r from-vault-gem to-vault-gold"
+                    }`}
+                    style={{ width: `${Math.min(risk * 2.5, 100)}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-      </div>
       </div>
 
       {/* Vault Images */}
-      <div className="px-4 flex-1 flex flex-col items-center justify-start gap-2 pt-2">
+      <div className="px-4 flex-1 flex flex-col items-center justify-center gap-2 pt-2 pb-2">
         {Array.from({ length: run.currentVault + 2 }, (_, i) => i + 1).map((vaultNum) => {
           const isOpen = vaultNum < run.currentVault;
           const isCurrent = vaultNum === run.currentVault && !run.isTrapTriggered;
@@ -348,7 +344,7 @@ export default function VaultRunScreen({
                 isCurrent && !showOutcome ? "cursor-pointer" : ""
               } ${isPastTrap ? "opacity-30" : isOpen ? "opacity-50" : ""}`}
             >
-              {/* Vault image */}
+              {/* Vault image — responsive sizing */}
               <div
                 className={`relative rounded-xl overflow-hidden border-2 transition-all duration-300 ${
                   isCurrent
@@ -360,14 +356,14 @@ export default function VaultRunScreen({
                     : isOpen
                     ? "border-vault-gold/40 grayscale"
                     : "border-vault-700 opacity-60"
-                } ${isCurrent ? "w-48 h-48" : "w-28 h-28"}`}
+                } ${isCurrent ? "w-[min(42vw,11rem)] h-[min(42vw,11rem)]" : "w-[min(22vw,5.5rem)] h-[min(22vw,5.5rem)]"}`}
               >
                 <Image
                   src={getVaultImage(player.activeVaultSkin)}
                   alt={`Vault ${vaultNum}`}
                   fill
                   className={`object-cover ${isAnimating ? "animate-pulse" : ""}`}
-                  sizes={isCurrent ? "192px" : "112px"}
+                  sizes={isCurrent ? "(max-width: 768px) 42vw, 176px" : "(max-width: 768px) 22vw, 88px"}
                   priority={isCurrent}
                 />
 
@@ -552,10 +548,11 @@ export default function VaultRunScreen({
                     })}
                   </div>
                   {hasBonuses && (
-                    <div className="mt-3 pt-3 border-t border-vault-700/50 text-xs text-vault-400">
-                      {bonuses.jackpotChanceBonus > 0 && <p>+{bonuses.jackpotChanceBonus}% jackpot chance (from cosmetics)</p>}
-                      {bonuses.mediumGemChanceBonus > 0 && <p>+{bonuses.mediumGemChanceBonus}% medium gem chance (from cosmetics)</p>}
-                      {bonuses.trapReduction > 0 && <p>-{bonuses.trapReduction}% trap chance (from cosmetics)</p>}
+                    <div className="mt-3 pt-3 border-t border-vault-700/50 text-xs text-vault-400 space-y-1">
+                      {bonuses.jackpotChanceBonus > 0 && <p>+{bonuses.jackpotChanceBonus}% jackpot chance (steals from trap)</p>}
+                      {bonuses.mediumGemChanceBonus > 0 && <p>+{bonuses.mediumGemChanceBonus}% medium gem chance (steals from trap)</p>}
+                      {bonuses.trapReduction > 0 && <p>-{bonuses.trapReduction}% trap chance (steals to small/medium gems)</p>}
+                      {bonuses.trapReduction < 0 && <p className="text-vault-danger">+{Math.abs(bonuses.trapReduction)}% trap chance (from equipped avatar)</p>}
                     </div>
                   )}
                 </>
