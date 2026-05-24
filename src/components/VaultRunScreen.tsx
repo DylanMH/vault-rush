@@ -243,12 +243,30 @@ export default function VaultRunScreen({
               }`}
               onClick={() => setRewardsExpanded(true)}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
                 <span className="text-[10px] text-vault-400 font-bold uppercase">Vault {run.currentVault}</span>
                 <div className="flex items-baseline gap-1">
                   <Gem size={14} className="text-vault-gem" />
                   <span className="text-sm font-black text-white">{formatNumber(run.unbankedGems)}</span>
                 </div>
+                {run.unbankedKeys > 0 && (
+                  <div className="flex items-baseline gap-0.5">
+                    <KeyRound size={10} className="text-vault-gold" />
+                    <span className="text-[10px] font-bold text-vault-gold">{run.unbankedKeys}</span>
+                  </div>
+                )}
+                {run.unbankedShards > 0 && (
+                  <div className="flex items-baseline gap-0.5">
+                    <Sparkles size={10} className="text-vault-accent" />
+                    <span className="text-[10px] font-bold text-vault-accent">{run.unbankedShards}</span>
+                  </div>
+                )}
+                {run.unbankedReviveTokens > 0 && (
+                  <div className="flex items-baseline gap-0.5">
+                    <Heart size={10} className="text-red-400" />
+                    <span className="text-[10px] font-bold text-red-400">{run.unbankedReviveTokens}</span>
+                  </div>
+                )}
                 <span className="text-[10px] text-vault-gold font-bold">x{run.currentMultiplier.toFixed(1)}</span>
               </div>
               <div className="flex items-center gap-2">
@@ -270,19 +288,25 @@ export default function VaultRunScreen({
                 <span className="text-2xl font-black text-white">{formatNumber(run.unbankedGems)}</span>
               </div>
 
-              <div className="flex items-center gap-3 mt-1.5">
-                <div className="flex items-center gap-1">
-                  <Sparkles size={10} className="text-vault-accent" />
-                  <span className="text-[10px] text-vault-accent font-bold">{run.history.reduce((s, h) => s + (h.shards || 0), 0)} Shards</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <KeyRound size={10} className="text-vault-gold" />
-                  <span className="text-[10px] text-vault-gold font-bold">{run.history.reduce((s, h) => s + (h.keys || 0), 0)} Keys</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Heart size={10} className="text-red-400" />
-                  <span className="text-[10px] text-red-400 font-bold">{run.history.reduce((s, h) => s + (h.type === "bonusLife" ? 1 : 0), 0)} Lives</span>
-                </div>
+              <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                {run.unbankedShards > 0 && (
+                  <div className="flex items-center gap-1">
+                    <Sparkles size={10} className="text-vault-accent" />
+                    <span className="text-[10px] text-vault-accent font-bold">{run.unbankedShards} Shards</span>
+                  </div>
+                )}
+                {run.unbankedKeys > 0 && (
+                  <div className="flex items-center gap-1">
+                    <KeyRound size={10} className="text-vault-gold" />
+                    <span className="text-[10px] text-vault-gold font-bold">{run.unbankedKeys} Keys</span>
+                  </div>
+                )}
+                {run.unbankedReviveTokens > 0 && (
+                  <div className="flex items-center gap-1">
+                    <Heart size={10} className="text-red-400" />
+                    <span className="text-[10px] text-red-400 font-bold">{run.unbankedReviveTokens} Lives</span>
+                  </div>
+                )}
                 <span className="text-[10px] text-vault-gold font-bold">x{run.currentMultiplier.toFixed(1)}</span>
               </div>
 

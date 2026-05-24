@@ -401,6 +401,9 @@ export function getDefaultRunState(): RunState {
   return {
     currentVault: 0,
     unbankedGems: 0,
+    unbankedKeys: 0,
+    unbankedShards: 0,
+    unbankedReviveTokens: 0,
     currentMultiplier: 1,
     isTrapTriggered: false,
     isRunActive: false,

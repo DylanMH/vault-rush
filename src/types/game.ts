@@ -50,6 +50,9 @@ export interface Player {
 export interface RunState {
   currentVault: number;
   unbankedGems: number;
+  unbankedKeys: number;
+  unbankedShards: number;
+  unbankedReviveTokens: number;
   currentMultiplier: number;
   isTrapTriggered: boolean;
   isRunActive: boolean;

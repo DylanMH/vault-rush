@@ -236,6 +236,9 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
             isRunActive: true,
             currentVault: result.current_vault,
             unbankedGems: result.unbanked_gems,
+            unbankedKeys: result.unbanked_keys || 0,
+            unbankedShards: result.unbanked_shards || 0,
+            unbankedReviveTokens: result.unbanked_revive_tokens || 0,
             currentMultiplier: Number(result.current_multiplier),
             isTrapTriggered: result.is_trap_triggered,
             history: (result.history || []) as VaultOutcome[],
@@ -249,9 +252,6 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
               trapCount: playerData.trap_count || prev.trapCount,
               jackpotCount: playerData.jackpot_count || prev.jackpotCount,
               highestJackpot: playerData.highest_jackpot || prev.highestJackpot,
-              reviveTokens: playerData.revive_tokens || prev.reviveTokens,
-              cosmeticShards: playerData.cosmetic_shards || prev.cosmeticShards,
-              keys: playerData.keys || prev.keys,
             }));
           }
         }
@@ -264,6 +264,7 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
 
     // Guest fallback: client-side application
     setRun((prev) => {
+      const event = getDailyEvent();
       const next: RunState = {
         ...prev,
         history: [...prev.history, outcome],
@@ -278,12 +279,22 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
       } else if (outcome.gems) {
         next.unbankedGems = prev.unbankedGems + outcome.gems;
       }
+      if (outcome.type === "bonusLife") {
+        next.unbankedReviveTokens = prev.unbankedReviveTokens + 1;
+      }
+      if (outcome.shards) {
+        next.unbankedShards = prev.unbankedShards + outcome.shards + event.shardBonus;
+      } else if (event.shardBonus > 0) {
+        next.unbankedShards = prev.unbankedShards + event.shardBonus;
+      }
+      if (outcome.keys) {
+        next.unbankedKeys = prev.unbankedKeys + outcome.keys;
+      }
 
       return next;
     });
 
     setPlayer((prev) => {
-      const event = getDailyEvent();
       const next = { ...prev, totalVaultsOpened: prev.totalVaultsOpened + 1 };
       if (outcome.type === "trap") next.trapCount = prev.trapCount + 1;
       if (outcome.type === "jackpot") {
@@ -292,17 +303,6 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
           prev.highestJackpot,
           outcome.gems || 0
         );
-      }
-      if (outcome.type === "bonusLife") {
-        next.reviveTokens = prev.reviveTokens + 1;
-      }
-      if (outcome.shards) {
-        next.cosmeticShards = prev.cosmeticShards + outcome.shards + event.shardBonus;
-      } else if (event.shardBonus > 0) {
-        next.cosmeticShards = prev.cosmeticShards + event.shardBonus;
-      }
-      if (outcome.keys) {
-        next.keys = prev.keys + outcome.keys;
       }
       return next;
     });
@@ -327,6 +327,9 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
           p_hit_jackpot: hitJackpot,
           p_outcomes: run.history,
           p_xp_multiplier: bonuses.xpMultiplier,
+          p_keys_banked: run.unbankedKeys,
+          p_shards_banked: run.unbankedShards,
+          p_revive_tokens_banked: run.unbankedReviveTokens,
         });
 
         if (error) throw error;
@@ -339,6 +342,7 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
             gems: result.gems,
             keys: result.keys,
             reviveTokens: result.revive_tokens,
+            cosmeticShards: result.cosmetic_shards,
             level: result.level,
             xp: result.xp,
             xpToNextLevel: result.xp_to_next_level,
@@ -405,6 +409,9 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
         next.bestRunGems = Math.max(prev.bestRunGems, banked);
         next.weeklyScore = prev.weeklyScore + banked;
       }
+      next.keys = prev.keys + run.unbankedKeys;
+      next.cosmeticShards = prev.cosmeticShards + run.unbankedShards;
+      next.reviveTokens = prev.reviveTokens + run.unbankedReviveTokens;
       return next;
     });
 
