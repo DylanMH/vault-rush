@@ -38,6 +38,7 @@ function convertSupabaseToPlayer(sp: SupabasePlayer): Player {
     activeVaultSkin: sp.active_vault_skin,
     activeAvatar: sp.active_avatar,
     activeBadgeFrame: sp.active_badge_frame,
+    betaTesterRewarded: sp.beta_tester_rewarded ?? false,
   };
 }
 
@@ -69,6 +70,7 @@ function convertPlayerToSupabase(p: Player, userId: string): Partial<SupabasePla
     active_vault_skin: p.activeVaultSkin,
     active_avatar: p.activeAvatar,
     active_badge_frame: p.activeBadgeFrame,
+    beta_tester_rewarded: p.betaTesterRewarded,
   };
 }
 

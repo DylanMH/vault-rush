@@ -50,6 +50,8 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
     rewards: { gems: number; keys: number; shards: number };
   } | null>(null);
 
+  const [showBetaReward, setShowBetaReward] = useState(false);
+
   const playerSnapshotRef = useRef<Player | null>(null);
 
   const [isPlayerLoaded, setIsPlayerLoaded] = useState(false);
@@ -101,6 +103,40 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
 
       console.log('[loadInitialPlayer] loaded gems:', loadedPlayer.gems, 'keys:', loadedPlayer.keys);
       setPlayer(loadedPlayer);
+
+      // Restore any existing active run from the server
+      if (auth.isAuthenticated && auth.userId) {
+        try {
+          const { data: activeRun } = await supabase
+            .from('active_runs')
+            .select('*')
+            .eq('user_id', auth.userId)
+            .maybeSingle();
+          if (activeRun) {
+            setRun({
+              ...getDefaultRunState(),
+              isRunActive: true,
+              currentVault: activeRun.current_vault,
+              unbankedGems: activeRun.unbanked_gems || 0,
+              unbankedKeys: activeRun.unbanked_keys || 0,
+              unbankedShards: activeRun.unbanked_shards || 0,
+              unbankedReviveTokens: activeRun.unbanked_revive_tokens || 0,
+              currentMultiplier: Number(activeRun.current_multiplier) || 1,
+              isTrapTriggered: activeRun.is_trap_triggered || false,
+              reviveUsed: activeRun.revive_used || false,
+              history: (activeRun.history || []) as VaultOutcome[],
+            });
+            setScreen('run');
+          }
+        } catch {
+          // no active run or error — stay on home
+        }
+      }
+
+      const BETA_TESTER_ID = 'c7bdb09c-7a65-4e7f-ba92-a76743b72c6c';
+      if (auth.userId === BETA_TESTER_ID && !loadedPlayer.betaTesterRewarded) {
+        setShowBetaReward(true);
+      }
 
       setIsPlayerLoaded(true);
     }
@@ -177,6 +213,7 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
   );
 
   const startRun = useCallback(async () => {
+    if (run.isRunActive) return false;
     if (player.keys < 1) return false;
 
     if (auth.isAuthenticated && auth.userId) {
@@ -209,7 +246,7 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
     setShowOutcome(false);
     setScreen("run");
     return true;
-  }, [player.keys, auth.isAuthenticated, auth.userId]);
+  }, [run.isRunActive, player.keys, auth.isAuthenticated, auth.userId]);
 
   const openVault = useCallback(async () => {
     if (!run.isRunActive || run.isTrapTriggered) return;
@@ -551,6 +588,30 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
     return true;
   }, [player.lastDailyClaim, player.streak, player.isSubscribed, auth]);
 
+  const claimBetaReward = useCallback(async () => {
+    if (!auth.isAuthenticated || !auth.userId) return;
+    try {
+      const { data, error } = await supabase.rpc('claim_beta_reward');
+      if (error) throw error;
+      if (data && data[0]) {
+        const result = data[0];
+        if (result.success) {
+          setPlayer((prev) => ({
+            ...prev,
+            gems: result.gems,
+            keys: result.keys,
+            reviveTokens: result.revive_tokens,
+            cosmeticShards: result.cosmetic_shards,
+            isSubscribed: result.is_subscribed,
+            betaTesterRewarded: true,
+          }));
+        }
+      }
+    } catch (err) {
+      console.error('Beta reward claim error:', err);
+    }
+  }, [auth.isAuthenticated, auth.userId]);
+
   const purchaseItem = useCallback(
     async (item: ShopItem) => {
       // USD items MUST go through Stripe checkout + success page verification.
@@ -728,5 +789,8 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
     clearLevelUp: () => setLevelUpInfo(null),
     cancelRun,
     userId: auth.userId,
+    showBetaReward,
+    setShowBetaReward,
+    claimBetaReward,
   };
 }

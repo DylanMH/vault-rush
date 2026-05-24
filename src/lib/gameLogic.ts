@@ -372,6 +372,7 @@ export function getDefaultPlayer(): Player {
     activeVaultSkin: "vault-default",
     activeAvatar: "avatar-basic",
     activeBadgeFrame: "banner-default",
+    betaTesterRewarded: false,
   };
 }
 

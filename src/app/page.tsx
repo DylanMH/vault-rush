@@ -13,6 +13,7 @@ import DailyScreen from "@/components/DailyScreen";
 import ProfileScreen from "@/components/ProfileScreen";
 import AdModal from "@/components/AdModal";
 import LevelUpModal from "@/components/LevelUpModal";
+import BetaRewardModal from "@/components/BetaRewardModal";
 import BackgroundMusic from "@/components/BackgroundMusic";
 
 export default function Page() {
@@ -106,6 +107,13 @@ export default function Page() {
             currentXp={game.player.xp}
             xpToNext={game.player.xpToNextLevel}
             onClose={game.clearLevelUp}
+          />
+        )}
+
+        {game.showBetaReward && (
+          <BetaRewardModal
+            onClaim={game.claimBetaReward}
+            onClose={() => game.setShowBetaReward(false)}
           />
         )}
 

@@ -45,6 +45,7 @@ export interface Player {
   activeVaultSkin: string;
   activeAvatar: string;
   activeBadgeFrame: string;
+  betaTesterRewarded: boolean;
 }
 
 export interface RunState {

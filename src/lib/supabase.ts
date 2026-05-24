@@ -40,6 +40,7 @@ export interface SupabasePlayer {
   active_vault_skin: string;
   active_avatar: string;
   active_badge_frame: string;
+  beta_tester_rewarded: boolean;
   current_run: any | null;
   created_at: string;
   updated_at: string;
