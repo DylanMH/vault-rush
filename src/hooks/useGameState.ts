@@ -405,19 +405,26 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
 
           // Save run history for leaderboard/profile tracking
           auth.saveRun(vaultCount, banked, run.currentMultiplier, everHitTrap, hitJackpot, run.history);
-        } else {
-          // Server returned empty result — fallback locally
-          console.warn('bank_run_rewards returned empty data, falling back');
-          fallbackBankRewards();
+
+          // Success — clear run and go home
+          clearCurrentRun();
+          setRun(getDefaultRunState());
+          setLastOutcome(null);
+          setShowOutcome(false);
+          setScreen("home");
+          return;
         }
+
+        console.warn('bank_run_rewards returned empty data');
       } catch (err) {
         console.error('Bank rewards RPC error:', err);
-        fallbackBankRewards();
       }
-    } else {
-      fallbackBankRewards();
+      // Auth path failed — stay in run so user can retry; do NOT clear run or go home
+      return;
     }
 
+    // Guest fallback
+    fallbackBankRewards();
     clearCurrentRun();
     setRun(getDefaultRunState());
     setLastOutcome(null);
