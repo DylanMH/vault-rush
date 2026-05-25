@@ -17,6 +17,8 @@ export interface VaultOutcome {
   multiplierDelta?: number;
   keys?: number;
   shards?: number;
+  autoRevived?: boolean;
+  autoReviveSource?: string;
 }
 
 export interface Player {
@@ -77,9 +79,19 @@ export interface CosmeticBonuses {
   reviveTokenWeightBonus: number;
   jackpotWeightBonus: number;
   trapWeightReduction: number;
+  multiplierWeightBonus: number;
+  shardJackpotWeightBonus: number;
 
   // Flat bonuses (not odds-related)
   reviveTokenBonus: number;
+
+  // Mythic bonus types
+  trapAutoReviveChance: number;
+  shardDuplicationChance: number;
+  gemUpgradeChance: number;
+  deepVaultGemBonus: number;
+  lateBankBonus: number;
+  guaranteedSafeInterval: number;
 }
 
 export type RewardWeights = Record<OutcomeType, number>;
@@ -92,6 +104,7 @@ export interface CosmeticItem {
   shardCost: number;
   icon: string;
   bonuses: CosmeticBonuses;
+  setId?: string;
 }
 
 export interface ShopItem {

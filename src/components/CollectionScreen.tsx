@@ -4,10 +4,10 @@ import { useState } from "react";
 import { ChevronLeft, Gem, Lock, Crown } from "lucide-react";
 import { Player, CosmeticItem } from "@/types/game";
 import { useSound } from "@/hooks/useSound";
-import { COSMETIC_BONUSES } from "@/lib/gameLogic";
+import { COSMETIC_BONUSES, MYTHIC_SETS, SET_BONUSES } from "@/lib/gameLogic";
 import Image from "next/image";
 
-type TabKey = "vaultSkin" | "badgeFrame" | "avatar";
+type TabKey = "vaultSkin" | "badgeFrame" | "avatar" | "mythic";
 
 function formatBonus(id: string): string {
   const b = COSMETIC_BONUSES[id];
@@ -21,6 +21,14 @@ function formatBonus(id: string): string {
   if (b.shardMultiplier > 1) parts.push(`${b.shardMultiplier}x Shards`);
   if (b.xpMultiplier > 1) parts.push(`+${Math.round((b.xpMultiplier - 1) * 100)}% XP`);
   if (b.reviveTokenBonus > 0) parts.push(`+${b.reviveTokenBonus} Revive`);
+  if (b.multiplierWeightBonus > 0) parts.push(`+${b.multiplierWeightBonus} Mult Chance`);
+  if (b.shardJackpotWeightBonus > 0) parts.push(`+${b.shardJackpotWeightBonus} Shard Jpot Chance`);
+  if (b.trapAutoReviveChance > 0) parts.push(`${Math.round(b.trapAutoReviveChance * 100)}% Auto-Revive`);
+  if (b.shardDuplicationChance > 0) parts.push(`${Math.round(b.shardDuplicationChance * 100)}% Shard Dupe`);
+  if (b.gemUpgradeChance > 0) parts.push(`${Math.round(b.gemUpgradeChance * 100)}% Gem Upgrade`);
+  if (b.deepVaultGemBonus > 1) parts.push(`+${Math.round((b.deepVaultGemBonus - 1) * 100)}% Deep Vault Gems`);
+  if (b.lateBankBonus > 0) parts.push(`+${Math.round(b.lateBankBonus * 100)}% Late Bank`);
+  if (b.guaranteedSafeInterval > 0) parts.push(`Safe every ${b.guaranteedSafeInterval} vaults`);
   return parts.join(" · ");
 }
 
@@ -47,6 +55,24 @@ function getCosmeticImage(id: string): string {
     "avatar-joker": "/assets/avatars/joker-avatar.png",
     "avatar-shadow": "/assets/avatars/shadow-avatar.png",
     "avatar-dragon": "/assets/avatars/dragon-avatar.png",
+    "vault-mythic-guardian": "/assets/mythic-vaults/mythic-guardian.png",
+    "vault-mythic-crystal": "/assets/mythic-vaults/mythic-crystal.png",
+    "vault-mythic-void": "/assets/mythic-vaults/mythic-void.png",
+    "vault-mythic-oblivion": "/assets/mythic-vaults/mythic-oblivion.png",
+    "vault-mythic-god": "/assets/mythic-vaults/mythic-god.png",
+    "vault-mythic-ethereal": "/assets/mythic-vaults/mythic-ethereal.png",
+    "banner-mythic-guardian": "/assets/mythic-banners/mythic-guardian.png",
+    "banner-mythic-crystal": "/assets/mythic-banners/mythic-crystal.png",
+    "banner-mythic-void": "/assets/mythic-banners/mythic-void.png",
+    "banner-mythic-oblivion": "/assets/mythic-banners/mythic-oblivion.png",
+    "banner-mythic-god": "/assets/mythic-banners/mythic-god.png",
+    "banner-mythic-ethereal": "/assets/mythic-banners/mythic-ethereal.png",
+    "avatar-mythic-guardian": "/assets/mythic-avatars/mythic-guardian.png",
+    "avatar-mythic-crystal": "/assets/mythic-avatars/mythic-crystal.png",
+    "avatar-mythic-void": "/assets/mythic-avatars/mythic-void.png",
+    "avatar-mythic-oblivion": "/assets/mythic-avatars/mythic-oblivion.png",
+    "avatar-mythic-god": "/assets/mythic-avatars/mythic-god.png",
+    "avatar-mythic-ethereal": "/assets/mythic-avatars/mythic-ethereal.png",
   };
   return map[id] || "";
 }
@@ -78,6 +104,31 @@ const COSMETICS: CosmeticItem[] = [
   { id: "avatar-joker", name: "Joker", type: "avatar", description: "High risk, high reward jackpot master", shardCost: 1000, icon: "", bonuses: COSMETIC_BONUSES["avatar-joker"] },
   { id: "avatar-shadow", name: "Shadow", type: "avatar", description: "Trap dodger + medium gem finder", shardCost: 1250, icon: "", bonuses: COSMETIC_BONUSES["avatar-shadow"] },
   { id: "avatar-dragon", name: "Dragon", type: "avatar", description: "Vault Rush Plus exclusive — best bonuses", shardCost: 0, icon: "", bonuses: COSMETIC_BONUSES["avatar-dragon"] },
+
+  // Mythic Sets
+  { id: "vault-mythic-guardian", name: "Guardian Vault", type: "vaultSkin", description: "Mythic survival vault skin", shardCost: 1500, icon: "", bonuses: COSMETIC_BONUSES["vault-mythic-guardian"], setId: "guardian" },
+  { id: "banner-mythic-guardian", name: "Guardian Banner", type: "badgeFrame", description: "Mythic survival banner", shardCost: 2000, icon: "", bonuses: COSMETIC_BONUSES["banner-mythic-guardian"], setId: "guardian" },
+  { id: "avatar-mythic-guardian", name: "Guardian Avatar", type: "avatar", description: "Mythic survival avatar", shardCost: 2500, icon: "", bonuses: COSMETIC_BONUSES["avatar-mythic-guardian"], setId: "guardian" },
+
+  { id: "vault-mythic-crystal", name: "Crystal Vault", type: "vaultSkin", description: "Mythic gem wealth vault skin", shardCost: 2000, icon: "", bonuses: COSMETIC_BONUSES["vault-mythic-crystal"], setId: "crystal" },
+  { id: "banner-mythic-crystal", name: "Crystal Banner", type: "badgeFrame", description: "Mythic gem wealth banner", shardCost: 2500, icon: "", bonuses: COSMETIC_BONUSES["banner-mythic-crystal"], setId: "crystal" },
+  { id: "avatar-mythic-crystal", name: "Crystal Avatar", type: "avatar", description: "Mythic gem wealth avatar", shardCost: 3000, icon: "", bonuses: COSMETIC_BONUSES["avatar-mythic-crystal"], setId: "crystal" },
+
+  { id: "vault-mythic-void", name: "Void Vault", type: "vaultSkin", description: "Mythic deep run vault skin", shardCost: 2500, icon: "", bonuses: COSMETIC_BONUSES["vault-mythic-void"], setId: "void" },
+  { id: "banner-mythic-void", name: "Void Banner", type: "badgeFrame", description: "Mythic deep run banner", shardCost: 3000, icon: "", bonuses: COSMETIC_BONUSES["banner-mythic-void"], setId: "void" },
+  { id: "avatar-mythic-void", name: "Void Avatar", type: "avatar", description: "Mythic deep run avatar", shardCost: 3500, icon: "", bonuses: COSMETIC_BONUSES["avatar-mythic-void"], setId: "void" },
+
+  { id: "vault-mythic-oblivion", name: "Oblivion Vault", type: "vaultSkin", description: "Mythic jackpot hunter vault skin", shardCost: 3000, icon: "", bonuses: COSMETIC_BONUSES["vault-mythic-oblivion"], setId: "oblivion" },
+  { id: "banner-mythic-oblivion", name: "Oblivion Banner", type: "badgeFrame", description: "Mythic jackpot hunter banner", shardCost: 3500, icon: "", bonuses: COSMETIC_BONUSES["banner-mythic-oblivion"], setId: "oblivion" },
+  { id: "avatar-mythic-oblivion", name: "Oblivion Avatar", type: "avatar", description: "Mythic jackpot hunter avatar", shardCost: 4000, icon: "", bonuses: COSMETIC_BONUSES["avatar-mythic-oblivion"], setId: "oblivion" },
+
+  { id: "vault-mythic-god", name: "God Vault", type: "vaultSkin", description: "Mythic RNG control vault skin", shardCost: 3500, icon: "", bonuses: COSMETIC_BONUSES["vault-mythic-god"], setId: "god" },
+  { id: "banner-mythic-god", name: "God Banner", type: "badgeFrame", description: "Mythic RNG control banner", shardCost: 4000, icon: "", bonuses: COSMETIC_BONUSES["banner-mythic-god"], setId: "god" },
+  { id: "avatar-mythic-god", name: "God Avatar", type: "avatar", description: "Mythic RNG control avatar", shardCost: 4500, icon: "", bonuses: COSMETIC_BONUSES["avatar-mythic-god"], setId: "god" },
+
+  { id: "vault-mythic-ethereal", name: "Ethereal Vault", type: "vaultSkin", description: "Mythic ultimate hybrid vault skin", shardCost: 4000, icon: "", bonuses: COSMETIC_BONUSES["vault-mythic-ethereal"], setId: "ethereal" },
+  { id: "banner-mythic-ethereal", name: "Ethereal Banner", type: "badgeFrame", description: "Mythic ultimate hybrid banner", shardCost: 4500, icon: "", bonuses: COSMETIC_BONUSES["banner-mythic-ethereal"], setId: "ethereal" },
+  { id: "avatar-mythic-ethereal", name: "Ethereal Avatar", type: "avatar", description: "Mythic ultimate hybrid avatar", shardCost: 5000, icon: "", bonuses: COSMETIC_BONUSES["avatar-mythic-ethereal"], setId: "ethereal" },
 ];
 
 interface CollectionScreenProps {
@@ -95,22 +146,119 @@ export default function CollectionScreen({ player, onBack, onUnlock, onEquip }: 
     { key: "vaultSkin", label: "Vaults" },
     { key: "badgeFrame", label: "Banners" },
     { key: "avatar", label: "Avatars" },
+    { key: "mythic", label: "Mythic" },
   ];
 
-  const activeMap: Record<TabKey, string> = {
+  const activeMap: Record<Exclude<TabKey, "mythic">, string> = {
     vaultSkin: player.activeVaultSkin,
     badgeFrame: player.activeBadgeFrame,
     avatar: player.activeAvatar,
   };
 
-  const activeId = activeMap[activeTab];
-  const activeItem = COSMETICS.find((c) => c.id === activeId);
+  const activeId = activeTab === "mythic" ? null : activeMap[activeTab as Exclude<TabKey, "mythic">];
+  const activeItem = activeId ? COSMETICS.find((c) => c.id === activeId) : null;
 
   function isSubscriberOnly(id: string): boolean {
     return id === "vault-plus" || id === "avatar-dragon";
   }
 
-  const tabItems = COSMETICS.filter((c) => c.type === activeTab);
+  function getSetProgress(setId: string): { owned: number; total: number; equipped: number } {
+    const items = MYTHIC_SETS[setId].items;
+    return {
+      owned: items.filter((id) => player.ownedCosmetics.includes(id)).length,
+      total: items.length,
+      equipped: items.filter((id) => [player.activeVaultSkin, player.activeBadgeFrame, player.activeAvatar].includes(id)).length,
+    };
+  }
+
+  const tabItems = activeTab === "mythic"
+    ? COSMETICS.filter((c) => c.setId)
+    : COSMETICS.filter((c) => c.type === activeTab && !c.setId);
+
+  function renderItemCard(item: CosmeticItem) {
+    const isStarter = item.shardCost === 0 && !isSubscriberOnly(item.id);
+    const owned = player.ownedCosmetics.includes(item.id) || isStarter;
+    const active = [player.activeVaultSkin, player.activeBadgeFrame, player.activeAvatar].includes(item.id);
+    const imgPath = getCosmeticImage(item.id);
+    const subscriberOnly = isSubscriberOnly(item.id);
+    const locked = subscriberOnly && !player.isSubscribed;
+
+    return (
+      <div
+        key={item.id}
+        className={`flex flex-col rounded-xl border transition overflow-hidden h-full ${
+          active
+            ? "bg-vault-800 border-vault-gold"
+            : locked
+            ? "bg-vault-800/30 border-vault-700/50 opacity-60"
+            : "bg-vault-800/60 border-vault-700"
+        }`}
+      >
+        {/* Image */}
+        <div className="relative w-full aspect-square bg-vault-700/50 overflow-hidden">
+          {imgPath ? (
+            <Image src={imgPath} alt={item.name} fill className="object-contain p-1" sizes="(max-width: 640px) 50vw, 33vw" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <Gem size={28} className="text-vault-400" />
+            </div>
+          )}
+          {locked && (
+            <div className="absolute inset-0 bg-vault-900/70 flex items-center justify-center">
+              <Lock size={24} className="text-vault-500" />
+            </div>
+          )}
+        </div>
+
+        {/* Info */}
+        <div className="flex flex-col flex-1 p-2.5 sm:p-3 gap-1">
+          <div className="flex items-center gap-1 flex-wrap">
+            <p className="text-xs sm:text-sm font-bold text-white leading-tight">{item.name}</p>
+            {subscriberOnly && <Crown size={10} className="text-vault-gold shrink-0" />}
+          </div>
+          <p className="text-[10px] sm:text-[11px] text-vault-400 leading-snug">{item.description}</p>
+          {formatBonus(item.id) && !locked && (
+            <p className="text-[9px] sm:text-[10px] text-vault-gold font-semibold leading-snug">{formatBonus(item.id)}</p>
+          )}
+
+          <div className="mt-auto pt-2">
+            {locked ? (
+              <span className="w-full flex items-center justify-center gap-1 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold bg-vault-700 text-vault-500">
+                <Crown size={12} />
+                Plus
+              </span>
+            ) : owned ? (
+              <button
+                onClick={() => { sound.playClick(); onEquip(item.id, item.type); }}
+                className={`w-full py-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition ${
+                  active
+                    ? "bg-vault-gold/20 text-vault-gold border border-vault-gold/40"
+                    : "bg-vault-700 text-white border border-vault-600 hover:bg-vault-600"
+                }`}
+              >
+                {active ? "Equipped" : "Equip"}
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  sound.playClick();
+                  Promise.resolve(onUnlock(item)).then((ok) => ok && sound.playPurchase());
+                }}
+                disabled={player.cosmeticShards < item.shardCost}
+                className={`w-full py-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition ${
+                  player.cosmeticShards >= item.shardCost
+                    ? "bg-vault-accent text-white"
+                    : "bg-vault-700 text-vault-500 cursor-not-allowed"
+                }`}
+              >
+                {item.shardCost} Shards
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-vault-900">
@@ -134,7 +282,9 @@ export default function CollectionScreen({ player, onBack, onUnlock, onEquip }: 
             onClick={() => { sound.playClick(); setActiveTab(t.key); }}
             className={`flex-1 px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition ${
               activeTab === t.key
-                ? "bg-vault-gold text-vault-900"
+                ? t.key === "mythic"
+                  ? "bg-vault-accent text-white"
+                  : "bg-vault-gold text-vault-900"
                 : "bg-vault-800 text-vault-400"
             }`}
           >
@@ -173,93 +323,95 @@ export default function CollectionScreen({ player, onBack, onUnlock, onEquip }: 
         </div>
       )}
 
-      {/* Grid Cards */}
-      <div className="px-4 py-4 grid grid-cols-2 sm:grid-cols-3 gap-3 pb-20">
-        {tabItems.map((item) => {
-          const isStarter = item.shardCost === 0 && !isSubscriberOnly(item.id);
-          const owned = player.ownedCosmetics.includes(item.id) || isStarter;
-          const active = activeId === item.id;
-          const imgPath = getCosmeticImage(item.id);
-          const subscriberOnly = isSubscriberOnly(item.id);
-          const locked = subscriberOnly && !player.isSubscribed;
+      {/* Content */}
+      {activeTab === "mythic" ? (
+        <div className="px-4 py-4 space-y-6 pb-20">
+          {Object.entries(MYTHIC_SETS).map(([setId, setData]) => {
+            const progress = getSetProgress(setId);
+            const setBonus = SET_BONUSES[setId];
+            const isComplete = progress.equipped === 3;
+            const setItems = COSMETICS.filter((c) => c.setId === setId);
 
-          return (
-            <div
-              key={item.id}
-              className={`flex flex-col rounded-xl border transition overflow-hidden ${
-                active
-                  ? "bg-vault-800 border-vault-gold"
-                  : locked
-                  ? "bg-vault-800/30 border-vault-700/50 opacity-60"
-                  : "bg-vault-800/60 border-vault-700"
-              }`}
-            >
-              {/* Image */}
-              <div className="relative w-full aspect-square bg-vault-700 overflow-hidden">
-                {imgPath ? (
-                  <Image src={imgPath} alt={item.name} fill className="object-cover" sizes="(max-width: 640px) 50vw, 33vw" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Gem size={28} className="text-vault-400" />
+            return (
+              <div key={setId} className={`rounded-2xl border p-3 sm:p-4 ${isComplete ? 'border-vault-accent bg-vault-800/80' : 'border-vault-700 bg-vault-800/40'}`}>
+                {/* Set Header */}
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <p className={`text-sm font-black ${isComplete ? 'text-vault-accent' : 'text-white'}`}>{setData.name} Set</p>
+                    <p className="text-[10px] text-vault-400">{progress.owned}/{progress.total} owned · {progress.equipped}/3 equipped</p>
                   </div>
-                )}
-                {locked && (
-                  <div className="absolute inset-0 bg-vault-900/70 flex items-center justify-center">
-                    <Lock size={24} className="text-vault-500" />
-                  </div>
-                )}
-              </div>
-
-              {/* Info */}
-              <div className="flex flex-col flex-1 p-2.5 sm:p-3 gap-1">
-                <div className="flex items-center gap-1 flex-wrap">
-                  <p className="text-xs sm:text-sm font-bold text-white leading-tight">{item.name}</p>
-                  {subscriberOnly && <Crown size={10} className="text-vault-gold shrink-0" />}
-                </div>
-                <p className="text-[10px] sm:text-[11px] text-vault-400 leading-snug">{item.description}</p>
-                {formatBonus(item.id) && !locked && (
-                  <p className="text-[9px] sm:text-[10px] text-vault-gold font-semibold leading-snug">{formatBonus(item.id)}</p>
-                )}
-
-                <div className="mt-auto pt-2">
-                  {locked ? (
-                    <span className="w-full flex items-center justify-center gap-1 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold bg-vault-700 text-vault-500">
-                      <Crown size={12} />
-                      Plus
-                    </span>
-                  ) : owned ? (
-                    <button
-                      onClick={() => { sound.playClick(); onEquip(item.id, item.type); }}
-                      className={`w-full py-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition ${
-                        active
-                          ? "bg-vault-gold/20 text-vault-gold border border-vault-gold/40"
-                          : "bg-vault-700 text-white border border-vault-600 hover:bg-vault-600"
-                      }`}
-                    >
-                      {active ? "Equipped" : "Equip"}
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        sound.playClick();
-                        Promise.resolve(onUnlock(item)).then((ok) => ok && sound.playPurchase());
-                      }}
-                      disabled={player.cosmeticShards < item.shardCost}
-                      className={`w-full py-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition ${
-                        player.cosmeticShards >= item.shardCost
-                          ? "bg-vault-accent text-white"
-                          : "bg-vault-700 text-vault-500 cursor-not-allowed"
-                      }`}
-                    >
-                      {item.shardCost} Shards
-                    </button>
+                  {setBonus && (
+                    <div className={`text-right px-2 py-1 rounded-lg ${isComplete ? 'bg-vault-accent/20' : 'bg-vault-700/50'}`}>
+                      <p className={`text-[10px] font-bold ${isComplete ? 'text-vault-accent' : 'text-vault-400'}`}>{setBonus.name}</p>
+                      <p className="text-[9px] text-vault-400">{setBonus.description}</p>
+                    </div>
                   )}
                 </div>
+
+                {/* Set Items Grid */}
+                <div className="grid grid-cols-3 gap-2">
+                  {setItems.map((item) => {
+                    const owned = player.ownedCosmetics.includes(item.id);
+                    const active = [player.activeVaultSkin, player.activeBadgeFrame, player.activeAvatar].includes(item.id);
+                    const imgPath = getCosmeticImage(item.id);
+
+                    return (
+                      <div key={item.id} className={`flex flex-col rounded-xl border transition overflow-hidden h-full ${active ? 'bg-vault-800 border-vault-gold' : 'bg-vault-800/60 border-vault-700'}`}>
+                        <div className="relative w-full aspect-square bg-vault-700/50 overflow-hidden">
+                          {imgPath ? (
+                            <Image src={imgPath} alt={item.name} fill className="object-contain p-1" sizes="33vw" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Gem size={20} className="text-vault-400" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex flex-col flex-1 p-2 gap-1">
+                          <p className="text-[10px] font-bold text-white leading-tight">{item.name}</p>
+                          {formatBonus(item.id) && (
+                            <p className="text-[8px] text-vault-gold font-semibold leading-tight">{formatBonus(item.id)}</p>
+                          )}
+                          {owned ? (
+                            <button
+                              onClick={() => { sound.playClick(); onEquip(item.id, item.type); }}
+                              className={`w-full py-1 rounded text-[9px] font-bold transition ${
+                                active
+                                  ? "bg-vault-gold/20 text-vault-gold border border-vault-gold/40"
+                                  : "bg-vault-700 text-white border border-vault-600 hover:bg-vault-600"
+                              }`}
+                            >
+                              {active ? "Equipped" : "Equip"}
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                sound.playClick();
+                                Promise.resolve(onUnlock(item)).then((ok) => ok && sound.playPurchase());
+                              }}
+                              disabled={player.cosmeticShards < item.shardCost}
+                              className={`w-full py-1 rounded text-[9px] font-bold transition ${
+                                player.cosmeticShards >= item.shardCost
+                                  ? "bg-vault-accent text-white"
+                                  : "bg-vault-700 text-vault-500 cursor-not-allowed"
+                              }`}
+                            >
+                              {item.shardCost}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="px-4 py-4 grid grid-cols-2 sm:grid-cols-3 gap-3 pb-20">
+          {tabItems.map((item) => renderItemCard(item))}
+        </div>
+      )}
     </div>
   );
 }

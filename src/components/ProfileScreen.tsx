@@ -15,6 +15,12 @@ function getAvatarImage(avatarId: string): string {
     "avatar-joker": "/assets/avatars/joker-avatar.png",
     "avatar-shadow": "/assets/avatars/shadow-avatar.png",
     "avatar-dragon": "/assets/avatars/dragon-avatar.png",
+    "avatar-mythic-guardian": "/assets/mythic-avatars/mythic-guardian.png",
+    "avatar-mythic-crystal": "/assets/mythic-avatars/mythic-crystal.png",
+    "avatar-mythic-void": "/assets/mythic-avatars/mythic-void.png",
+    "avatar-mythic-oblivion": "/assets/mythic-avatars/mythic-oblivion.png",
+    "avatar-mythic-god": "/assets/mythic-avatars/mythic-god.png",
+    "avatar-mythic-ethereal": "/assets/mythic-avatars/mythic-ethereal.png",
   };
   return map[avatarId] || "/assets/avatars/basic-avatar.png";
 }
@@ -30,6 +36,12 @@ function getBannerImage(bannerId: string): string {
     "banner-galaxy": "/assets/banners/galaxy-banner.png",
     "banner-golden-bird": "/assets/banners/golden-bird-banner.png",
     "banner-champion": "/assets/banners/champion-banner.png",
+    "banner-mythic-guardian": "/assets/mythic-banners/mythic-guardian.png",
+    "banner-mythic-crystal": "/assets/mythic-banners/mythic-crystal.png",
+    "banner-mythic-void": "/assets/mythic-banners/mythic-void.png",
+    "banner-mythic-oblivion": "/assets/mythic-banners/mythic-oblivion.png",
+    "banner-mythic-god": "/assets/mythic-banners/mythic-god.png",
+    "banner-mythic-ethereal": "/assets/mythic-banners/mythic-ethereal.png",
   };
   return map[bannerId] || "/assets/banners/emerald-banner.png";
 }

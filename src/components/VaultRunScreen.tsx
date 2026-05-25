@@ -5,7 +5,7 @@ import { Gem, KeyRound, Heart, AlertTriangle, X, Info, Sparkles, User, Box, Hexa
 import Image from "next/image";
 import { Player, RunState, VaultOutcome } from "@/types/game";
 import { formatNumber } from "@/lib/utils";
-import { getRiskPercent, VAULT_WEIGHTS, getActiveCosmeticBonuses, applyCosmeticBonusesToWeights, normalizeWeightsToPercentages, OUTCOME_BASE_LABELS, COSMETIC_BONUSES } from "@/lib/gameLogic";
+import { getRiskPercent, VAULT_WEIGHTS, getActiveCosmeticBonuses, applyCosmeticBonusesToWeights, normalizeWeightsToPercentages, OUTCOME_BASE_LABELS, COSMETIC_BONUSES, getActiveMythicSet, SET_BONUSES, MYTHIC_SETS } from "@/lib/gameLogic";
 import { useSound } from "@/hooks/useSound";
 import confetti from "canvas-confetti";
 
@@ -16,6 +16,12 @@ function getVaultImage(skinId: string): string {
     "vault-red-ruby": "/assets/vaults/red_ruby_vault.png",
     "vault-purple-cosmic": "/assets/vaults/purple_cosmic_vault.png",
     "vault-plus": "/assets/vaults/gold_legendary_vault.png",
+    "vault-mythic-guardian": "/assets/mythic-vaults/mythic-guardian.png",
+    "vault-mythic-crystal": "/assets/mythic-vaults/mythic-crystal.png",
+    "vault-mythic-void": "/assets/mythic-vaults/mythic-void.png",
+    "vault-mythic-oblivion": "/assets/mythic-vaults/mythic-oblivion.png",
+    "vault-mythic-god": "/assets/mythic-vaults/mythic-god.png",
+    "vault-mythic-ethereal": "/assets/mythic-vaults/mythic-ethereal.png",
   };
   return map[skinId] || "/assets/vaults/green_emerald_vault.png";
 }
@@ -29,6 +35,12 @@ function getAvatarImage(avatarId: string): string {
     "avatar-joker": "/assets/avatars/joker-avatar.png",
     "avatar-shadow": "/assets/avatars/shadow-avatar.png",
     "avatar-dragon": "/assets/avatars/dragon-avatar.png",
+    "avatar-mythic-guardian": "/assets/mythic-avatars/mythic-guardian.png",
+    "avatar-mythic-crystal": "/assets/mythic-avatars/mythic-crystal.png",
+    "avatar-mythic-void": "/assets/mythic-avatars/mythic-void.png",
+    "avatar-mythic-oblivion": "/assets/mythic-avatars/mythic-oblivion.png",
+    "avatar-mythic-god": "/assets/mythic-avatars/mythic-god.png",
+    "avatar-mythic-ethereal": "/assets/mythic-avatars/mythic-ethereal.png",
   };
   return map[avatarId] || "/assets/avatars/basic-avatar.png";
 }
@@ -44,6 +56,12 @@ function getBannerImage(bannerId: string): string {
     "banner-galaxy": "/assets/banners/galaxy-banner.png",
     "banner-golden-bird": "/assets/banners/golden-bird-banner.png",
     "banner-champion": "/assets/banners/champion-banner.png",
+    "banner-mythic-guardian": "/assets/mythic-banners/mythic-guardian.png",
+    "banner-mythic-crystal": "/assets/mythic-banners/mythic-crystal.png",
+    "banner-mythic-void": "/assets/mythic-banners/mythic-void.png",
+    "banner-mythic-oblivion": "/assets/mythic-banners/mythic-oblivion.png",
+    "banner-mythic-god": "/assets/mythic-banners/mythic-god.png",
+    "banner-mythic-ethereal": "/assets/mythic-banners/mythic-ethereal.png",
   };
   return map[bannerId] || "/assets/banners/emerald-banner.png";
 }
@@ -60,7 +78,28 @@ function formatCompactBonusesForId(id: string): string {
   if (b.shardMultiplier > 1) parts.push(`${b.shardMultiplier.toFixed(1)}x Shard`);
   if (b.xpMultiplier > 1) parts.push(`+${Math.round((b.xpMultiplier - 1) * 100)}% XP`);
   if (b.reviveTokenBonus > 0) parts.push(`+${b.reviveTokenBonus} Revive`);
+  if (b.multiplierWeightBonus > 0) parts.push(`+${b.multiplierWeightBonus} Mult Chance`);
+  if (b.shardJackpotWeightBonus > 0) parts.push(`+${b.shardJackpotWeightBonus} ShardJpot`);
+  if (b.trapAutoReviveChance > 0) parts.push(`${Math.round(b.trapAutoReviveChance * 100)}% Auto-Revive`);
+  if (b.shardDuplicationChance > 0) parts.push(`${Math.round(b.shardDuplicationChance * 100)}% ShardDupe`);
+  if (b.gemUpgradeChance > 0) parts.push(`${Math.round(b.gemUpgradeChance * 100)}% GemUpg`);
+  if (b.deepVaultGemBonus > 1) parts.push(`+${Math.round((b.deepVaultGemBonus - 1) * 100)}% DeepVault`);
+  if (b.lateBankBonus > 0) parts.push(`+${Math.round(b.lateBankBonus * 100)}% LateBank`);
+  if (b.guaranteedSafeInterval > 0) parts.push(`Safe/${b.guaranteedSafeInterval} vaults`);
   return parts.length ? parts.join(" · ") : "No bonuses";
+}
+
+function getMythicGlowColor(setId: string | null): string | null {
+  if (!setId) return null;
+  const colors: Record<string, string> = {
+    guardian: "59, 130, 246",   // blue
+    crystal: "6, 182, 212",      // cyan
+    void: "139, 92, 246",      // purple
+    oblivion: "239, 68, 68",     // red
+    god: "251, 191, 36",         // bright gold
+    ethereal: "229, 231, 235",   // white/silver
+  };
+  return colors[setId] || null;
 }
 
 function triggerHaptic() {
@@ -104,6 +143,9 @@ export default function VaultRunScreen({
   const [justShardJackpot, setJustShardJackpot] = useState(false);
   const [rewardsExpanded, setRewardsExpanded] = useState(false);
   const headerRef = useRef<HTMLDivElement>(null);
+
+  const activeMythicSet = getActiveMythicSet(player);
+  const glowColor = getMythicGlowColor(activeMythicSet);
 
   // Auto-scroll to current vault when it changes
   useEffect(() => {
@@ -326,6 +368,17 @@ export default function VaultRunScreen({
                 </div>
               </div>
 
+              {/* Active Mythic Set Bonus */}
+              {activeMythicSet && SET_BONUSES[activeMythicSet] && (
+                <div className="mt-2 pt-2 border-t border-vault-700/50">
+                  <div className="flex items-center gap-1.5">
+                    <Sparkles size={12} className="text-vault-accent shrink-0" />
+                    <p className="text-[10px] font-bold text-vault-accent">{MYTHIC_SETS[activeMythicSet].name} Set Active</p>
+                  </div>
+                  <p className="text-[9px] text-vault-accentLight font-semibold leading-tight ml-5">{SET_BONUSES[activeMythicSet].name} — {SET_BONUSES[activeMythicSet].description}</p>
+                </div>
+              )}
+
               {/* Risk Meter */}
               <div className="mt-2">
                 <div className="flex items-center justify-between text-[10px] mb-1">
@@ -374,14 +427,19 @@ export default function VaultRunScreen({
                 className={`relative rounded-xl overflow-hidden border-2 transition-all duration-300 ${
                   isCurrent
                     ? isAnimating
-                      ? "border-vault-gold shadow-[0_0_25px_rgba(245,158,11,0.4)] scale-105"
-                      : "border-vault-gold shadow-[0_0_15px_rgba(245,158,11,0.3)]"
+                      ? glowColor
+                        ? "border-vault-gold scale-105"
+                        : "border-vault-gold shadow-[0_0_25px_rgba(245,158,11,0.4)] scale-105"
+                      : glowColor
+                        ? "border-vault-gold"
+                        : "border-vault-gold shadow-[0_0_15px_rgba(245,158,11,0.3)]"
                     : isTrap
                     ? "border-vault-danger shadow-[0_0_15px_rgba(239,68,68,0.3)]"
                     : isOpen
                     ? "border-vault-gold/40 grayscale"
                     : "border-vault-700 opacity-60"
                 } ${isCurrent ? "w-[min(42vw,11rem)] h-[min(42vw,11rem)]" : "w-[min(22vw,5.5rem)] h-[min(22vw,5.5rem)]"}`}
+                style={isCurrent && glowColor ? { boxShadow: `0 0 25px rgba(${glowColor}, 0.5), 0 0 50px rgba(${glowColor}, 0.3)` } : undefined}
               >
                 <Image
                   src={getVaultImage(player.activeVaultSkin)}
@@ -626,9 +684,12 @@ function OutcomePopup({
   onClose: () => void;
 }) {
   const sound = useSound();
+  const isAutoRevived = outcome.autoRevived;
   const isPositive =
-    outcome.type !== "trap";
-  const bg = isPositive
+    outcome.type !== "trap" || isAutoRevived;
+  const bg = isAutoRevived
+    ? "border-vault-accent bg-vault-800"
+    : isPositive
     ? outcome.type === "jackpot"
       ? "border-vault-gold bg-vault-800"
       : outcome.type === "shardJackpot"
@@ -648,7 +709,9 @@ function OutcomePopup({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-3">
-          {outcome.type === "trap" ? (
+          {isAutoRevived ? (
+            <Heart size={48} className="mx-auto text-vault-accent" />
+          ) : outcome.type === "trap" ? (
             <AlertTriangle
               size={48}
               className="mx-auto text-vault-danger"
@@ -665,7 +728,9 @@ function OutcomePopup({
         </div>
         <p
           className={`text-2xl font-black mb-1 ${
-            outcome.type === "trap"
+            isAutoRevived
+              ? "text-vault-accent"
+              : outcome.type === "trap"
               ? "text-vault-danger"
               : outcome.type === "jackpot"
               ? "gold-text"
@@ -701,6 +766,11 @@ function OutcomePopup({
         {outcome.type === "bonusLife" ? (
           <p className="text-xl font-bold text-vault-accentLight">
             +1 Revive Token
+          </p>
+        ) : null}
+        {isAutoRevived && outcome.autoReviveSource ? (
+          <p className="text-xs text-vault-accentLight mt-1 font-semibold">
+            {outcome.autoReviveSource} triggered — you kept your life!
           </p>
         ) : null}
         <button

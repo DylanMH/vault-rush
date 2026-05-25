@@ -16,6 +16,8 @@ import {
   xpForLevel,
   getDailyEvent,
   getActiveCosmeticBonuses,
+  getActiveMythicSet,
+  getAutoReviveSource,
 } from "@/lib/gameLogic";
 import { useSupabasePlayer } from "@/hooks/useSupabasePlayer";
 import { supabase } from "@/lib/supabase";
@@ -253,17 +255,39 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
 
     // Always compute outcome client-side so guest and auth modes are identical
     const outcome = resolveVault(run.currentVault, run.currentMultiplier, player);
-    setLastOutcome(outcome);
+
+    // Compute mythic bonuses before showing outcome (same for auth + guest)
+    const bonuses = getActiveCosmeticBonuses(player);
+    let finalOutcome = outcome;
+    let autoRevived = false;
+    let autoReviveSource = "";
+
+    // Trap auto-revive: chance to survive a trap without consuming a token
+    if (outcome.type === "trap" && bonuses.trapAutoReviveChance > 0 && Math.random() < bonuses.trapAutoReviveChance) {
+      autoReviveSource = getAutoReviveSource(player);
+      finalOutcome = {
+        type: "trap" as const,
+        label: "TRAP! Auto-Revive saved you!",
+        gems: Math.round(Math.random() * 15 + 10),
+        autoRevived: true,
+        autoReviveSource,
+      };
+      autoRevived = true;
+    }
+
+    // Show the (possibly auto-revived) outcome in the popup
+    setLastOutcome(finalOutcome);
     setShowOutcome(true);
 
     if (auth.isAuthenticated && auth.userId) {
       try {
         const { data, error } = await supabase.rpc('open_vault', {
-          p_outcome_type: outcome.type,
-          p_gems: outcome.gems ?? 0,
-          p_multiplier_delta: outcome.multiplierDelta ?? 0,
-          p_keys: outcome.keys ?? 0,
-          p_shards: outcome.shards ?? 0,
+          p_outcome_type: finalOutcome.type,
+          p_gems: finalOutcome.gems ?? 0,
+          p_multiplier_delta: finalOutcome.multiplierDelta ?? 0,
+          p_keys: finalOutcome.keys ?? 0,
+          p_shards: finalOutcome.shards ?? 0,
+          p_auto_revived: autoRevived,
         });
         if (error) throw error;
         if (data && data[0]) {
@@ -304,28 +328,28 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
       const event = getDailyEvent();
       const next: RunState = {
         ...prev,
-        history: [...prev.history, outcome],
+        history: [...prev.history, finalOutcome],
         currentVault: prev.currentVault + 1,
       };
 
-      if (outcome.type === "trap") {
+      if (finalOutcome.type === "trap" && !finalOutcome.autoRevived) {
         next.isTrapTriggered = true;
-      } else if (outcome.type === "multiplier") {
+      } else if (finalOutcome.type === "multiplier") {
         next.currentMultiplier =
-          prev.currentMultiplier + (outcome.multiplierDelta || 0);
-      } else if (outcome.gems) {
-        next.unbankedGems = prev.unbankedGems + outcome.gems;
+          prev.currentMultiplier + (finalOutcome.multiplierDelta || 0);
+      } else if (finalOutcome.gems) {
+        next.unbankedGems = prev.unbankedGems + finalOutcome.gems;
       }
-      if (outcome.type === "bonusLife") {
+      if (finalOutcome.type === "bonusLife") {
         next.unbankedReviveTokens = prev.unbankedReviveTokens + 1;
       }
-      if (outcome.shards) {
-        next.unbankedShards = prev.unbankedShards + outcome.shards + event.shardBonus;
+      if (finalOutcome.shards) {
+        next.unbankedShards = prev.unbankedShards + finalOutcome.shards + event.shardBonus;
       } else if (event.shardBonus > 0) {
         next.unbankedShards = prev.unbankedShards + event.shardBonus;
       }
-      if (outcome.keys) {
-        next.unbankedKeys = prev.unbankedKeys + outcome.keys;
+      if (finalOutcome.keys) {
+        next.unbankedKeys = prev.unbankedKeys + finalOutcome.keys;
       }
 
       return next;
@@ -333,12 +357,12 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
 
     setPlayer((prev) => {
       const next = { ...prev, totalVaultsOpened: prev.totalVaultsOpened + 1 };
-      if (outcome.type === "trap") next.trapCount = prev.trapCount + 1;
-      if (outcome.type === "jackpot") {
+      if (finalOutcome.type === "trap" && !finalOutcome.autoRevived) next.trapCount = prev.trapCount + 1;
+      if (finalOutcome.type === "jackpot") {
         next.jackpotCount = prev.jackpotCount + 1;
         next.highestJackpot = Math.max(
           prev.highestJackpot,
-          outcome.gems || 0
+          finalOutcome.gems || 0
         );
       }
       return next;
@@ -355,6 +379,11 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
     if (auth.isAuthenticated && auth.userId) {
       // Server-side validation via RPC
       const bonuses = getActiveCosmeticBonuses(player);
+      const activeSet = getActiveMythicSet(player);
+
+      const lateBankBonusPct = vaultCount >= 5 ? bonuses.lateBankBonus : 0;
+      const etherealEcho = activeSet === 'ethereal' && Math.random() < 0.20;
+
       try {
         const { data, error } = await supabase.rpc('bank_run_rewards', {
           p_vaults_opened: vaultCount,
@@ -367,6 +396,8 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
           p_keys_banked: run.unbankedKeys,
           p_shards_banked: run.unbankedShards,
           p_revive_tokens_banked: run.unbankedReviveTokens,
+          p_late_bank_bonus_pct: lateBankBonusPct,
+          p_ethereal_echo: etherealEcho,
         });
 
         if (error) throw error;
@@ -434,10 +465,23 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
 
   const fallbackBankRewards = useCallback(() => {
     const event = getDailyEvent();
-    const banked = run.unbankedGems;
+    let banked = run.unbankedGems;
     const vaultCount = run.currentVault - 1;
     const hitJackpot = run.history.some(h => h.type === 'jackpot');
     const everHitTrap = run.history.some(h => h.type === 'trap');
+
+    const bonuses = getActiveCosmeticBonuses(player);
+    const activeSet = getActiveMythicSet(player);
+
+    // Late bank bonus: banking after 5+ vaults grants extra gems
+    if (vaultCount >= 5 && bonuses.lateBankBonus > 0) {
+      banked = Math.floor(banked * (1 + bonuses.lateBankBonus));
+    }
+
+    // Ethereal Echo: 20% chance to duplicate all rewards on bank
+    const etherealEcho = activeSet === 'ethereal' && Math.random() < 0.20;
+    const gemMult = etherealEcho ? 2 : 1;
+    const rewardMult = etherealEcho ? 2 : 1;
 
     // Always update longestRun and save run history, even with 0 banked
     setPlayer((prev) => {
@@ -446,21 +490,20 @@ export function useGameState(auth: ReturnType<typeof useSupabasePlayer>) {
         longestRun: Math.max(prev.longestRun, vaultCount),
       };
       if (banked > 0) {
-        let gems = prev.gems + Math.floor(banked * event.gemMultiplier);
-        if (prev.isSubscribed) gems += Math.floor(banked * 0.1);
+        let gems = prev.gems + Math.floor(banked * event.gemMultiplier * gemMult);
+        if (prev.isSubscribed) gems += Math.floor(banked * 0.1 * gemMult);
         next.gems = gems;
         next.totalGemsEarned = prev.totalGemsEarned + banked;
         next.bestRunGems = Math.max(prev.bestRunGems, banked);
         next.weeklyScore = prev.weeklyScore + banked;
       }
-      next.keys = prev.keys + run.unbankedKeys;
-      next.cosmeticShards = prev.cosmeticShards + run.unbankedShards;
-      next.reviveTokens = prev.reviveTokens + run.unbankedReviveTokens;
+      next.keys = prev.keys + run.unbankedKeys * rewardMult;
+      next.cosmeticShards = prev.cosmeticShards + run.unbankedShards * rewardMult;
+      next.reviveTokens = prev.reviveTokens + run.unbankedReviveTokens * rewardMult;
       return next;
     });
 
     if (banked > 0) {
-      const bonuses = getActiveCosmeticBonuses(player);
       addXp(Math.floor((vaultCount * 5 + Math.floor(banked / 5)) * event.xpMultiplier * bonuses.xpMultiplier * 0.5));
     }
 
